@@ -13,7 +13,7 @@
 #include <asm/v7m.h>
 
 #include "efi-header.S"
-
+// AR_CLASS, M_CLASS 매크로는 #if 구문을 줄일려고 만든 macro
  AR_CLASS(	.arch	armv7-a	)
  M_CLASS(	.arch	armv7-m	)
 
@@ -114,6 +114,11 @@
 #endif
 		.endm
 
+        /* k14a : section 의 옵션에서 alloc, execinstr 이 있는데...
+         * alloc : 메모리를 설정 할수 있고,
+         * execinstr : 실행 어쩌고 저쩌고 를 할 수 있다.
+         * Q: 요 .start 랑 아래 label 의 start 랑의 관계는?
+         */
 		.section ".start", #alloc, #execinstr
 /*
  * sort out different calling conventions
