@@ -1,0 +1,53 @@
+1. 커널 소스 받기 (라즈베리파이 ver)
+https://github.com/iamroot14a/linux.git
+
+2. 툴체인 받기
+git clone https://github.com/raspberrypi/tools
+
+3. 환경 설정
+
+vi ~/.bashrc
+
+export ARCH=arm
+// host os가 64bit 인경우
+export PATH=${PATH}:/home/aaaa/work/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian-x64/bin
+// host os가 32bit 인경우
+export PATH=${PATH}:/home/aaaa/work/tools/arm-bcm2708/gcc-linaro-arm-linux-gnueabihf-raspbian/bin
+export CROSS_COMPILE=arm-linux-gnueabihf-
+
+//toolchain받으신 path 확인해서 입력하셔야 합니다
+
+//변경사항적용
+source ~/.bashrc
+
+*참조
+https://www.raspberrypi.org/documentation/linux/kernel/building.md
+
+
+4. cscope, ctags 설치
+sudo apt-get install ctags cscope
+
+//linux 폴더에서 실행하시면 됩니다
+make bcm2709_defconfig
+make -j8 O=. SRCARCH=arm SUBARCH=bcm cscope tags
+
+
+//아래 사이트를 보고 cscope 및 tags설정을 했습니다
+https://stackoverflow.com/questions/33676829/vim-configuration-for-linux-kernel-development
+
+
+5. vim plugin(선택사항)  
+mkdir -p ~/.vim/autoload ~/.vim/bundle && \
+curl -LSso ~/.vim/autoload/pathogen.vim https://tpo.pe/pathogen.vim
+
+위 커맨드 입력후 ~/.vimrc 파일에 아래 내용 입력하시면 됩니다.
+
+execute pathogen#infect()
+syntax on
+filetype plugin indent on
+
+위 설정이 완료되었으면 최종적으로 아래 커맨드 입력하면 cscope 사용가능합니다
+
+
+git clone https://github.com/joe-skb7/cscope-maps.git ~/.vim/bundle/cscope-maps
+
