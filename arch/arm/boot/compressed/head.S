@@ -123,6 +123,12 @@
 /*
  * sort out different calling conventions
  */
+        /* k141a 2017-09-02
+         * align : https://sourceware.org/binutils/docs/as/Align.html#Align
+         *     저장공간사이즈를 맞춰줌. default 4 byte ( 2^2 = 4 byte )
+         *     arm 일땐 4 byte 라서 굳이 이렇게 명시적으로 align 을 줄 필요는
+         *     없지만, 그래도 적어줌...
+         */
 		.align
 		/*
 		 * Always enter in ARM state for CPUs that support the ARM ISA.
@@ -138,6 +144,14 @@ start:
 #ifndef CONFIG_THUMB2_KERNEL
 		mov	r0, r0
 #else
+        /* k14a 2017-09-02
+         * pc - 3 의 의미는 ... arm register 에서 ARM/THUMB bit 바꾸는거
+         *  nop.n : 16-bit Thumb ("narrow")
+         *  nop.w : 32-bit Thumb-2 ("wide")
+         *  ref url : https://stackoverflow.com/questions/27147043/n-suffix-to-branch-instruction
+         *
+         * endian 을 커널컴파일에서 정할수 있는데 거기서 읽는 값의 위치로 한번더 확인할수 있다.
+         */
  AR_CLASS(	sub	pc, pc, #3	)	@ A/R: switch to Thumb2 mode
   M_CLASS(	nop.w			)	@ M: already in Thumb2 mode
 		.thumb
@@ -151,6 +165,14 @@ start:
 
 		__EFI_HEADER
 1:
+
+/* IAMROOT-14AB:
+   -------------
+   BE8 은 Big-Endian 설정인데 우린 little endian
+   R9 : CPSR
+*/
+
+
  ARM_BE8(	setend	be		)	@ go BE8 if compiled for BE8
  AR_CLASS(	mrs	r9, cpsr	)
 #ifdef CONFIG_ARM_VIRT_EXT
