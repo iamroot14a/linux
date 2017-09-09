@@ -192,6 +192,11 @@
  * reference local symbols in the same assembly file which are to be
  * resolved by the assembler.  Other usage is undefined.
  */
+
+/* IAMROOT-14AB:
+   -------------
+   .irp구문이 c에 다음에 오는 값들을 대입하여 각각의 macro를 생성한다.
+*/
 	.irp	c,,eq,ne,cs,cc,mi,pl,vs,vc,hi,ls,ge,lt,gt,le,hs,lo
 	.macro	badr\c, rd, sym
 #ifdef CONFIG_THUMB2_KERNEL
@@ -341,6 +346,13 @@
  * This macro is intended for forcing the CPU into SVC mode at boot time.
  * you cannot return to the original mode.
  */
+
+
+/* IAMROOT-14AB:
+   -------------
+   하이퍼 모드일 경우 bne 아래 수행, 불확실한 data abort disable
+*/
+
 .macro safe_svcmode_maskall reg:req
 #if __LINUX_ARM_ARCH__ >= 6 && !defined(CONFIG_CPU_V7M)
 	mrs	\reg , cpsr
