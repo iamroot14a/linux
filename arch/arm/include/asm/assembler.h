@@ -351,6 +351,17 @@
 /* IAMROOT-14AB:
    -------------
    하이퍼 모드일 경우 bne 아래 수행, 불확실한 data abort disable
+   SVC + I(Disable) + F(Disable) 보장
+   eor : excusive or
+       ex. 만일 HYP_MODE와 같으면 0x0이 됨
+   tst : 만일 HYP_MODE면 0
+   bne : HYP_MODE일때만 해당 부분도 수행됨
+   PSR_A_BIT : asyncronous abort disable
+   cpsr_cxsf : c - control (Mode, I, F, T)
+               x - extension
+			   s - status
+			   f - flag
+   __MSR_ELR_HYP, __ERET : HYP 관련 명령어인듯. Skip
 */
 
 .macro safe_svcmode_maskall reg:req

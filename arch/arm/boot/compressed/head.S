@@ -135,8 +135,18 @@
 		 * As of today (2014) that's exactly the members of the A and R
 		 * classes.
 		 */
+/* k14a 2017-09-02
+   -------------
+   명령어를 arm mode로 사용하기 위해 선언.
+   .code 32 와 동일한 역활을 함.
+   만일 .thumb라면 .code 16 과동일한 역활.
+ */
  AR_CLASS(	.arm	)
 start:
+/* IAMROOT-14AB:
+   -------------
+   start라는 이름을 가진 Symbol. function type임.
+*/
 		.type	start,#function
 		.rept	7
 		__nop
@@ -158,11 +168,28 @@ start:
 #endif
 		W(b)	1f
 
+		/* IAMROOT-14AB:
+		   -------------
+		   위 [nop x 7] + [move r0, r0] + [W(b) 1f] = 36byte 뒤에 zImage관련 magic number가 위치함
+		   해당 magic number는 압축된 커널 이미지가 커널 이미지인지 검증하기 위함.
+		   이렇게 하는 이유는 특정 부트로더가 0xNNNN8020 에서부터 시작하는 경우가 있기 때문.
+		   ref url : https://casionwoo.github.io/jekyll/update/2016/08/01/start-symbol.html
+		   http://comments.gmane.org/gmane.linux.ports.arm.kernel/26690
+		 */
 		.word	_magic_sig	@ Magic numbers to help the loader
 		.word	_magic_start	@ absolute load/run zImage address
 		.word	_magic_end	@ zImage end address
 		.word	0x04030201	@ endianness flag
 
+		/* IAMROOT-14AB:
+		   -------------
+		   EFI는파일을 실행하기 위해 필요한 meta정보들의 데이터 집합이다.
+		   일반적으로 EFI는 실행 파일의 젤 앞에 붙는다.
+		   그러나 zImage의 경우엔 magic number 등 정보가 앞에 붙기때문에
+		   별개로 하기와 같이 선언해준다.
+		   현재는 __EFI_HEADER macro안에서 선언된 데이터 없음(CONFIG_EFI_STUB)
+		   ref url : https://ko.wikipedia.org/wiki/PE_%ED%8F%AC%EB%A7%B7
+		 */
 		__EFI_HEADER
 1:
 
@@ -171,13 +198,24 @@ start:
    BE8 은 Big-Endian 설정인데 우린 little endian
    R9 : CPSR
 */
-
-
  ARM_BE8(	setend	be		)	@ go BE8 if compiled for BE8
  AR_CLASS(	mrs	r9, cpsr	)
 #ifdef CONFIG_ARM_VIRT_EXT
+		/* IAMROOT-14AB:
+		   -------------
+		   가상화에 대한 초기 설정으로 Skip.
+		 */
 		bl	__hyp_stub_install	@ get into SVC mode, reversibly
 #endif
+		/* IAMROOT-14AB:
+		   -------------
+		   uboot으로부터 R0, R1, R2가 설정됨
+		   * theKernel (0, bd->bi_arch_number, bd->bi_boot_params);
+		   * ref url :
+		      http://blog.dasomoli.org/318/
+		      http://www.iamroot.org/xe/?module=file&act=procFileDownload&file_srl=22310&sid=ac82db91ebd0de2adc93ecfc6c63c860&module_srl=14947
+		      http://jake.dothome.co.kr/category/linux/page/53/
+		 */
 		mov	r7, r1			@ save architecture ID
 		mov	r8, r2			@ save atags pointer
 
@@ -188,13 +226,39 @@ start:
 		 * We only do this if we were in user mode on entry.
 		 */
 		mrs	r2, cpsr		@ get current mode
+
+		/* IAMROOT-14AB:
+		   -------------
+		   if not User -> not_angel로 감
+		   00000b : user
+		   11111b : system
+		   10001b : FIQ
+		   10010b : IRQ
+		   10011b : SVC
+		   10111b : Abort
+		   11011b : Undefined
+		   * ref url : http://www.jkelec.co.kr/img/lecture/arm_arch/arm_arch_3.html
+		 */
 		tst	r2, #3			@ not user?
 		bne	not_angel
+
+		/* IAMROOT-14AB:
+		   -------------
+		   아마도 Angel 모드인 경우는 User모드로 들어오는 것 같음.
+		   Angel에 대한 자세한 사항은 다음 ref url 참조.
+		 * ref url : http://infocenter.arm.com/help/topic/com.arm.doc.dui0203ik/DUI0203IK_rvct_developer_guide.pdf
+		 			 http://www.iamroot.org/xe/index.php?document_srl=20912&mid=Kernel
+		 */
 		mov	r0, #0x17		@ angel_SWIreason_EnterSVC
  ARM(		swi	0x123456	)	@ angel_SWI_ARM
  THUMB(		svc	0xab		)	@ angel_SWI_THUMB
 not_angel:
 		safe_svcmode_maskall r0
+
+		/* IAMROOT-14AB:
+		   -------------
+		   SVC(SPSR) <- R9(원래 백업했었던 CPSR)
+		 */
 		msr	spsr_cxsf, r9		@ Save the CPU boot mode in
 						@ SPSR
 #endif
@@ -210,6 +274,10 @@ not_angel:
 
 		.text
 
+		/* IAMROOT-14AB:
+		   -------------
+		   여기까지 함.
+		 */
 #ifdef CONFIG_AUTO_ZRELADDR
 		/*
 		 * Find the start of physical memory.  As we are executing
