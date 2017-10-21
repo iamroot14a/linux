@@ -160,6 +160,7 @@ __lookup_processor_type:
 	teq	r3, r4
 	beq	2f
 	add	r5, r5, #PROC_INFO_SZ		@ sizeof(proc_info_list)
+//k14AB : (__proc_info_begin + #SZ)(r5) __proc_info_end(r6)
 	cmp	r5, r6
 	blo	1b
 	mov	r5, #0				@ unknown processor

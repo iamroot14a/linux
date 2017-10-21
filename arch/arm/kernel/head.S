@@ -34,6 +34,7 @@
  * the least significant 16 bits to be 0x8000, but we could probably
  * relax this restriction to KERNEL_RAM_VADDR >= PAGE_OFFSET + 0x4000.
  */
+//k14AB : PAGE_OFFSET = 0x80000000, TEXT_OFFSET = 0x8000
 #define KERNEL_RAM_VADDR	(PAGE_OFFSET + TEXT_OFFSET)
 #if (KERNEL_RAM_VADDR & 0xffff) != 0x8000
 #error KERNEL_RAM_VADDR must start at 0xXXXX8000
@@ -48,9 +49,12 @@
 #define PMD_ORDER	2
 #endif
 
+//k14AB : KERNEL_RAM_VADDR = 0x80008000, PG_DIR_SIZE = 0x4000
+//        swapper_pg_dir = 0x80004000
 	.globl	swapper_pg_dir
 	.equ	swapper_pg_dir, KERNEL_RAM_VADDR - PG_DIR_SIZE
 
+//k14AB : TEXT_OFFSET = 0x8000, PG_DIR_SIZE 0x4000
 	.macro	pgtbl, rd, phys
 	add	\rd, \phys, #TEXT_OFFSET
 	sub	\rd, \rd, #PG_DIR_SIZE
@@ -91,6 +95,7 @@ ENTRY(stext)
 	@ ensure svc mode and all interrupts masked
 	safe_svcmode_maskall r9
 
+//k14AB : http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0360f/CHDGIJFB.html
 	mrc	p15, 0, r9, c0, c0		@ get processor id
 	bl	__lookup_processor_type		@ r5=procinfo r9=cpuid
 	movs	r10, r5				@ invalid processor (r5=0)?
@@ -163,7 +168,7 @@ ENDPROC(stext)
 	.ltorg
 #ifndef CONFIG_XIP_KERNEL
 2:	.long	.
-	.long	PAGE_OFFSET
+	.long	PAGE_OFFSET       @ 0x80000000
 #endif
 
 /*
@@ -178,6 +183,8 @@ ENDPROC(stext)
  *  r4 = physical page table address
  */
 __create_page_tables:
+//k14AB : r4 = PAGE_OFFSET + TEXT_OFFSET - PG_DIR_SIZE
+//             0x80000000  + 0x8000      - 0x4000     = 0x80004000
 	pgtbl	r4, r8				@ page table address
 
 	/*
@@ -220,6 +227,8 @@ __create_page_tables:
 	add	r4, r4, #4			@ we only write the bottom word
 #endif
 #endif
+
+//k14AB : r8 = phys_offset, r9 = cpuid, r10 = procinfo
 
 	ldr	r7, [r10, #PROCINFO_MM_MMUFLAGS] @ mm_mmuflags
 
@@ -568,6 +577,7 @@ __do_fixup_smp_on_up:
 	cmp	r4, r5
 	reths	lr
 	ldmia	r4!, {r0, r6}
+//k14AB : r6 = ALT_UP(.long 0), r0 = ALT_SMP(.long 1), r3 = virtTOphys(delta)
  ARM(	str	r6, [r0, r3]	)
  THUMB(	add	r0, r0, r3	)
 #ifdef __ARMEB__
@@ -613,32 +623,42 @@ __fixup_pv_table:
 	add	r5, r5, r3	@ adjust table end address
 	add	r6, r6, r3	@ adjust __pv_phys_pfn_offset address
 	add	r7, r7, r3	@ adjust __pv_offset address
+//k14AB : r0 = (PAGE_OFFSET(0x80000000) - delta)(r8) >> 12
 	mov	r0, r8, lsr #PAGE_SHIFT	@ convert to PFN
 	str	r0, [r6]	@ save computed PHYS_OFFSET to __pv_phys_pfn_offset
 	strcc	ip, [r7, #HIGH_OFFSET]	@ save to __pv_offset high bits
+//k14AB : 0h xxxx 0000 0000 0000
+//        kernel/head.S는 compressed/head.S 에서 128M align 맞췄음
 	mov	r6, r3, lsr #24	@ constant for add/sub instructions
 	teq	r3, r6, lsl #24 @ must be 16MiB aligned
 THUMB(	it	ne		@ cross section branch )
 	bne	__error
+//k14AB : r3 = 1f의 주소 - . = delta 값
 	str	r3, [r7, #LOW_OFFSET]	@ save to __pv_offset low bits
 	b	__fixup_a_pv_table
 ENDPROC(__fixup_pv_table)
 
 	.align
-1:	.long	.
-	.long	__pv_table_begin
-	.long	__pv_table_end
-2:	.long	__pv_phys_pfn_offset
-	.long	__pv_offset
+1:	.long	.                    @ r3
+	.long	__pv_table_begin     @ r4
+	.long	__pv_table_end       @ r5
+2:	.long	__pv_phys_pfn_offset @ r6
+	.long	__pv_offset          @ r7
 
 	.text
 __fixup_a_pv_table:
+/*k14AB :
+3:	.long	__pv_offset 위치에 delta 값
+ */
 	adr	r0, 3f
 	ldr	r6, [r0]
 	add	r6, r6, r3
+//k14AB : delta 값이 "-"인경우 0xffff ffff, 아니면 0 
 	ldr	r0, [r6, #HIGH_OFFSET]	@ pv_offset high word
 	ldr	r6, [r6, #LOW_OFFSET]	@ pv_offset low word
+//k14AB : r6 = delta >> 24 => 0xHH000000 -> 0x000000HH
 	mov	r6, r6, lsr #24
+//k14AB : delta 값이 "-"인경우 0xffff ffff + 1 = 0
 	cmn	r0, #1
 #ifdef CONFIG_THUMB2_KERNEL
 	moveq	r0, #0x200000	@ set bit 21, mov to mvn instruction
@@ -680,6 +700,7 @@ ARM_BE8(rev16	ip, ip)
 	moveq	r0, #0x400000	@ set bit 22, mov to mvn instruction
 #endif
 	b	2f
+//k14AB : r3 = delta
 1:	ldr	ip, [r7, r3]
 #ifdef CONFIG_CPU_ENDIAN_BE8
 	@ in BE8, we load data in BE, but instructions still in LE
@@ -691,11 +712,16 @@ ARM_BE8(rev16	ip, ip)
 #else
 	bic	ip, ip, #0x000000ff
 	tst	ip, #0xf00	@ check the rotation field
+//k14AB : r6 = delta >> 24 => 0xHH000000 -> 0x000000HH
 	orrne	ip, ip, r6	@ mask in offset bits 31-24
 	biceq	ip, ip, #0x400000	@ clear bit 22
+//k14AB : delta 값이 "-"인경우 r0 = 0x400000 => mvn(1111)
+//                   "+" 이면  r0 = 0        => mov(1101)
 	orreq	ip, ip, r0	@ mask in offset bits 7-0
 #endif
 	str	ip, [r7, r3]
+//k14AB : __pv_table_begin     @ r4
+//k14AB : __pv_table_end       @ r5
 2:	cmp	r4, r5
 	ldrcc	r7, [r4], #4	@ use branch for delay slot
 	bcc	1b

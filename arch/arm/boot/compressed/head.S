@@ -299,6 +299,8 @@ not_angel:
 		mov	r4, pc
 		and	r4, r4, #0xf8000000
 		/* Determine final kernel image address. */
+//k14AB :	./arch/arm/Makefile:   TEXT_OFFSET := $(textofs-y)
+//		./arch/arm/Makefile:   textofs-y  := 0x00008000
 		add	r4, r4, #TEXT_OFFSET
 #else
 		ldr	r4, =zreladdr
@@ -318,6 +320,7 @@ not_angel:
 		orrcc	r4, r4, #1		@ remember we skipped cache_on
 		blcs	cache_on
 
+//k14AB :       add     r0, pc, #offset
 restart:	adr	r0, LC0
 		ldmia	r0, {r1, r2, r3, r6, r10, r11, r12}
 		ldr	sp, [r0, #28]
@@ -326,6 +329,8 @@ restart:	adr	r0, LC0
 		 * We might be running at a different address.  We need
 		 * to fix up various pointers.
 		 */
+// k14AB : (r0)실행시 LC0위치(r1)와 linking 시에 할당된 LC0값(TEXT_START로 부터의 offset 값)을 보정
+// r6(_edata), r10(확장된 커널 크기), sp(스택포인터)는 실행시점의 주소(위치)가 사용되서 보정
 		sub	r0, r0, r1		@ calculate the delta offset
 		add	r6, r6, r0		@ _edata
 		add	r10, r10, r0		@ inflated kernel size location
@@ -335,13 +340,18 @@ restart:	adr	r0, LC0
 		 * decompressed kernel at the end of the compressed data
 		 * in little-endian form.
 		 */
-		ldrb	r9, [r10, #0]
-		ldrb	lr, [r10, #1]
-		orr	r9, r9, lr, lsl #8
-		ldrb	lr, [r10, #2]
-		ldrb	r10, [r10, #3]
-		orr	r9, r9, lr, lsl #16
-		orr	r9, r9, r10, lsl #24
+/*
+	xxxxxxABCD => r9 = DCBA
+	      ^
+	     r10
+*/
+		ldrb	r9, [r10, #0]		@->     A
+		ldrb	lr, [r10, #1]		@->     B
+		orr	r9, r9, lr, lsl #8	@->    BA
+		ldrb	lr, [r10, #2]		@->     C
+		ldrb	r10, [r10, #3]		@->     D
+		orr	r9, r9, lr, lsl #16	@->   CBA
+		orr	r9, r9, r10, lsl #24	@->  DCBA
 
 #ifndef CONFIG_ZBOOT_ROM
 		/* malloc space is above the relocated stack (64k max) */
@@ -418,6 +428,7 @@ restart:	adr	r0, LC0
 		/* temporarily relocate the stack past the DTB work space */
 		add	sp, sp, r5
 
+//k14AB : atags 위치(r8), _edata(r6), DTB size(r5)
 		stmfd	sp!, {r0-r3, ip, lr}
 		mov	r0, r8
 		mov	r1, r6
@@ -449,10 +460,16 @@ restart:	adr	r0, LC0
 		 * kernel size to compensate if that .bss size is larger
 		 * than the relocated code.
 		 */
+//k14AB : _edata(r6)
 		ldr	r5, =_kernel_bss_size
 		adr	r1, wont_overwrite
+//k14AB : r1 = _edata(r6) - wont_overwrite(r1)
 		sub	r1, r6, r1
+//k14AB : r1 = _kernel_bss_size(r5) - (_edata(r6) - wont_overwrite(r1))
+//        bss 크기와 (_edata - wont_overwrite) 비교
 		subs	r1, r5, r1
+//k14AB : r9 = size of decomp(r9) + (bss 와 (_edata - wont_overwrite)의 delta)
+//        decomp 후 bss 영역이 (_ed.. - ..te) 보다 큰경우 DTB 영역 침범 방지 위해
 		addhi	r9, r9, r1
 
 		/* Get the current DTB size */
@@ -470,7 +487,9 @@ restart:	adr	r0, LC0
 		bic	r5, r5, #7
 
 		/* relocate some pointers past the appended dtb */
+//k14AB : r6 = _edata(r6) + DTB size(r5)
 		add	r6, r6, r5
+//k14AB : r10 = (sp +0x10000)(r10) + DTB size(r5)
 		add	r10, r10, r5
 		add	sp, sp, r5
 dtb_check_done:
@@ -486,9 +505,13 @@ dtb_check_done:
  *   r4 + image length <= address of wont_overwrite -> OK
  * Note: the possible LSB in r4 is harmless here.
  */
+//k14AB : r10 = sp + 0x10000 + 16384
+//	  r4가 임의 지정인 경우는 r10 보다 클수 있음
 		add	r10, r10, #16384
 		cmp	r4, r10
 		bhs	wont_overwrite
+//k14AB	: r10 = (128M align + 0x8000)(r4) + size of decomp image(r9)
+//	  wont_overwrite (실행코드) 가 기준위치에 커널압축를 풀었을때 겹치는가?
 		add	r10, r4, r9
 		adr	r9, wont_overwrite
 		cmp	r10, r9
@@ -506,6 +529,8 @@ dtb_check_done:
 		 * the relocation code added. This avoids overwriting
 		 * ourself when the offset is small.
 		 */
+//k14AB :       r10 = (r4 + size of decomp image) + ((reloc_code_end - restart..)
+//재배치를 위해 필요한 영역의 끝 = 기준위치 + 압축해제된 커널크기 + 재배치등 코드
 		add	r10, r10, #((reloc_code_end - restart + 256) & ~255)
 		bic	r10, r10, #255
 
@@ -537,27 +562,38 @@ dtb_check_done:
 1:
 #endif
 
+//k14AB :	r9 = _edata(r6) - restart(32byte align)(r5)
+//              복사할 자료의 크기
 		sub	r9, r6, r5		@ size to copy
 		add	r9, r9, #31		@ rounded up to a multiple
 		bic	r9, r9, #31		@ ... of 32 bytes
+//k14AB :       r6 = (_edata - restart(32B))(r9) + restart(32Byte align)(r5)
+//		복사대상의 끝 주소
 		add	r6, r9, r5
+//k14AB :       r9 = (_edata - restart(32B))(r9) + 
+//            ((r4 + size decomp image) + ((reloc_code_end - restart ....))(r10)
+//              복사할곳의 끝주소
 		add	r9, r9, r10
 
+//k14AB :	r6 에서 r9 로 복사 실행
 1:		ldmdb	r6!, {r0 - r3, r10 - r12, lr}
 		cmp	r6, r5
 		stmdb	r9!, {r0 - r3, r10 - r12, lr}
 		bhi	1b
 
 		/* Preserve offset to relocated code. */
+//k14AB :	r6 = r6 에서 r9 로 재배치 후 delta 값(r9와 r6 까지의 거리)
 		sub	r6, r9, r6
 
 #ifndef CONFIG_ZBOOT_ROM
 		/* cache_clean_flush may use the stack, so relocate it */
+//k14AB :	스택포인터 재배치(위의 delta 값 더해줌)
 		add	sp, sp, r6
 #endif
 
 		bl	cache_clean_flush
 
+//k14AB :	재배치된 restart 주소를 구하고(위의 delta 값 더함) pc 변경
 		badr	r0, restart
 		add	r0, r0, r6
 		mov	pc, r0
@@ -579,6 +615,7 @@ wont_overwrite:
 		orrs	r1, r0, r5
 		beq	not_relocated
 
+//k14AB : GOT는 DTB(_edata) 아래 있음. delta 값만 보정
 		add	r11, r11, r0
 		add	r12, r12, r0
 
@@ -588,6 +625,7 @@ wont_overwrite:
 		 * we need to fix up pointers into the BSS region.
 		 * Note that the stack pointer has already been fixed up.
 		 */
+//k14AB : bss delta 값 보정
 		add	r2, r2, r0
 		add	r3, r3, r0
 
@@ -605,6 +643,7 @@ wont_overwrite:
 		blo	1b
 
 		/* bump our bss pointers too */
+//k14AB : bss를 위에 delta보정 후 DTB size 값만큼 추가 보정
 		add	r2, r2, r5
 		add	r3, r3, r5
 
@@ -622,6 +661,11 @@ wont_overwrite:
 		cmp	r11, r12
 		blo	1b
 #endif
+
+/* k14AB :
+ *   r2  = BSS start
+ *   r3  = BSS end
+ */
 
 not_relocated:	mov	r0, #0
 1:		str	r0, [r2], #4		@ clear bss
@@ -680,6 +724,8 @@ not_relocated:	mov	r0, #0
 
 		.align	2
 		.type	LC0, #object
+// k14ab : LC0 = linker 에 의해 TEXT_START 부터 현재 까지의 offset 값이 저장
+// 아래 값들은 TEXT_START 에서 부터의 상대적인 거리 값임
 LC0:		.word	LC0			@ r1
 		.word	__bss_start		@ r2
 		.word	_end			@ r3
@@ -788,6 +834,23 @@ __armv3_mpu_cache_on:
 #define CB_BITS 0x0c
 #endif
 
+/*
+ *
+ *
+ * r10 = r9 + 256MB
+ *
+ *
+ *
+ * r4 = 128M align + 0x8000(32k)
+ * r2 = r3 + 16KB
+ * r0 ====================================
+ * r0 [[[[[[[[[[ 변환테이블영역 ]]]]]]]]]]
+ * r0 ====================================
+ * r0 = r3 = (r4 - 16k) & (16k align)
+ * r9 = r3 & 256K align
+ *
+ */
+
 __setup_mmu:	sub	r3, r4, #16384		@ Page directory size
 		bic	r3, r3, #0xff		@ Align the pointer
 		bic	r3, r3, #0x3f00
@@ -796,9 +859,12 @@ __setup_mmu:	sub	r3, r4, #16384		@ Page directory size
  * bits for the RAM area only.
  */
 		mov	r0, r3
+//k14AB : 256KB align
 		mov	r9, r0, lsr #18
 		mov	r9, r9, lsl #18		@ start of RAM
+//k14AB : 0x10000000 = 256MB size
 		add	r10, r9, #0x10000000	@ a reasonable RAM size
+//k14AB : r1 = |0000 0000|0000 0000|0000 1100|0001 0010|
 		mov	r1, #0x12		@ XN|U + section mapping
 		orr	r1, r1, #3 << 10	@ AP=11
 		add	r2, r3, #16384
@@ -806,7 +872,10 @@ __setup_mmu:	sub	r3, r4, #16384		@ Page directory size
 		cmphs	r10, r1			@   && end of RAM > virt
 		bic	r1, r1, #0x1c		@ clear XN|U + C + B
 		orrlo	r1, r1, #0x10		@ Set XN|U for non-RAM
+//k14AB : r1 = |nnnn nnnn|nnnn 0000|0000 1100|0001 0000|
+//k14AB : r6 = #CB_BITS(0x0c) | 0x02     @ !XN
 		orrhs	r1, r1, r6		@ set RAM section settings
+//k14AB : r1 = |nnnn nnnn|nnnn 0000|0000 1100|0000 1110|
 		str	r1, [r0], #4		@ 1:1 mapping
 		add	r1, r1, #1048576
 		teq	r0, r2
@@ -817,11 +886,19 @@ __setup_mmu:	sub	r3, r4, #16384		@ Page directory size
  * so there is no map overlap problem for up to 1 MB compressed kernel.
  * If the execution is in RAM then we would only be duplicating the above.
  */
+//k14AB : r1 = |0000 0000|0000 0000|0000 1100|0001 0000|
+//k14AB : r6 = #CB_BITS(0x0c) | 0x02
 		orr	r1, r6, #0x04		@ ensure B is set for this
 		orr	r1, r1, #3 << 10
+//k14AB : r1 = |0000 0000|0000 0000|0000 1100|0000 1100|
 		mov	r2, pc
 		mov	r2, r2, lsr #20
 		orr	r1, r1, r2, lsl #20
+//k14AB : r1 = |pppp pppp|pppp 0000|0000 1100|0000 1100|
+//	  r2 = 페이지 변환테이블 인덱스 번호
+//	  (MB/word 단위임, r2, lsl #2 = r2 * 4 : 변환테이블은 word 단위 저장)
+//	  r3 = (r4 - 16k) & (16k align)
+//	  r0 = r3 + r2 * 4
 		add	r0, r3, r2, lsl #2
 		str	r1, [r0], #4
 		add	r1, r1, #1048576
@@ -865,6 +942,7 @@ __armv4_mmu_cache_on:
 __armv7_mmu_cache_on:
 		mov	r12, lr
 #ifdef CONFIG_MMU
+//k14AB : http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0290g/Babgbeed.html
 		mrc	p15, 0, r11, c0, c1, 4	@ read ID_MMFR0
 		tst	r11, #0xf		@ VMSA
 		movne	r6, #CB_BITS | 0x02	@ !XN
@@ -874,6 +952,7 @@ __armv7_mmu_cache_on:
 		tst	r11, #0xf		@ VMSA
 		mcrne	p15, 0, r0, c8, c7, 0	@ flush I,D TLBs
 #endif
+//k14AB : http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0360f/CHDGIJFB.html
 		mrc	p15, 0, r0, c1, c0, 0	@ read control reg
 		bic	r0, r0, #1 << 28	@ clear SCTLR.TRE
 		orr	r0, r0, #0x5000		@ I-cache enable, RR cache replacement
@@ -1251,6 +1330,7 @@ __armv6_mmu_cache_flush:
 		mcr	p15, 0, r1, c7, c10, 4	@ drain WB
 		mov	pc, lr
 
+//k14AB : http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0360f/CHDGIJFB.html
 __armv7_mmu_cache_flush:
 		tst	r4, #1
 		bne	iflush
