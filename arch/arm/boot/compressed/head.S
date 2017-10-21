@@ -575,7 +575,14 @@ dtb_check_done:
 //              복사할곳의 끝주소
 		add	r9, r9, r10
 
+//r4:depressed kernel base address
+//r5:restart(not relocated)
+//r6:edata(not relocated)
+//r7:achitecture id
+//r8:atag pointer
+//r9:edata(relocated)
 //k14AB :	r6 에서 r9 로 복사 실행
+//              r5 = restart(32byte align)
 1:		ldmdb	r6!, {r0 - r3, r10 - r12, lr}
 		cmp	r6, r5
 		stmdb	r9!, {r0 - r3, r10 - r12, lr}
@@ -872,7 +879,7 @@ __setup_mmu:	sub	r3, r4, #16384		@ Page directory size
 		cmphs	r10, r1			@   && end of RAM > virt
 		bic	r1, r1, #0x1c		@ clear XN|U + C + B
 		orrlo	r1, r1, #0x10		@ Set XN|U for non-RAM
-//k14AB : r1 = |nnnn nnnn|nnnn 0000|0000 1100|0001 0000|
+//k14AB : r1 = |nnnn nnnn|nnnn 0000|0000 1100|0001 0010|
 //k14AB : r6 = #CB_BITS(0x0c) | 0x02     @ !XN
 		orrhs	r1, r1, r6		@ set RAM section settings
 //k14AB : r1 = |nnnn nnnn|nnnn 0000|0000 1100|0000 1110|
@@ -890,11 +897,11 @@ __setup_mmu:	sub	r3, r4, #16384		@ Page directory size
 //k14AB : r6 = #CB_BITS(0x0c) | 0x02
 		orr	r1, r6, #0x04		@ ensure B is set for this
 		orr	r1, r1, #3 << 10
-//k14AB : r1 = |0000 0000|0000 0000|0000 1100|0000 1100|
+//k14AB : r1 = |0000 0000|0000 0000|0000 1100|0000 1110|
 		mov	r2, pc
 		mov	r2, r2, lsr #20
 		orr	r1, r1, r2, lsl #20
-//k14AB : r1 = |pppp pppp|pppp 0000|0000 1100|0000 1100|
+//k14AB : r1 = |pppp pppp|pppp 0000|0000 1100|0000 1110|
 //	  r2 = 페이지 변환테이블 인덱스 번호
 //	  (MB/word 단위임, r2, lsl #2 = r2 * 4 : 변환테이블은 word 단위 저장)
 //	  r3 = (r4 - 16k) & (16k align)
@@ -948,6 +955,7 @@ __armv7_mmu_cache_on:
 		movne	r6, #CB_BITS | 0x02	@ !XN
 		blne	__setup_mmu
 		mov	r0, #0
+//k14AB : 페이지 변환테이블 구성항목 DSB
 		mcr	p15, 0, r0, c7, c10, 4	@ drain write buffer
 		tst	r11, #0xf		@ VMSA
 		mcrne	p15, 0, r0, c8, c7, 0	@ flush I,D TLBs

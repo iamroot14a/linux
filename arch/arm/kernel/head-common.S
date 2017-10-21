@@ -150,6 +150,7 @@ ENDPROC(lookup_processor_type)
  *	r9 = cpuid (preserved)
  */
 __lookup_processor_type:
+//k14AB : add   r3, pc, #OFFSET
 	adr	r3, __lookup_processor_type_data
 	ldmia	r3, {r4 - r6}
 	sub	r3, r3, r4			@ get offset between virt&phys
@@ -173,9 +174,9 @@ ENDPROC(__lookup_processor_type)
 	.align	2
 	.type	__lookup_processor_type_data, %object
 __lookup_processor_type_data:
-	.long	.
-	.long	__proc_info_begin
-	.long	__proc_info_end
+	.long	.                         @ r4
+	.long	__proc_info_begin         @ r5
+	.long	__proc_info_end           @ r6
 	.size	__lookup_processor_type_data, . - __lookup_processor_type_data
 
 __error_lpae:
