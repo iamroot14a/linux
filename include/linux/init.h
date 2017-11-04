@@ -86,6 +86,9 @@
 #define __memexitconst   __section(.memexit.rodata)
 
 /* For assembly routines */
+//k14AB : http://www.nongnu.org/avr-libc/user-manual/mem_sections.html
+//The ,"ax",@progbits tells the assembler that the section is allocatable ("a"), executable ("x") and contains data ("@progbits"). For more detailed information on the .section directive, see the gas user manual.
+//
 #define __HEAD		.section	".head.text","ax"
 #define __INIT		.section	".init.text","ax"
 #define __FINIT		.previous

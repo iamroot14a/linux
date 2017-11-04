@@ -44,6 +44,15 @@
  *  r2 either valid atags pointer, valid dtb pointer, or zero
  *  r5, r6 corrupted
  */
+//k14AB : http://blog.dasomoli.org/318/
+//태그 이름  //값       //크기         //설명
+// ATAG_CORE 0x54410001 5 (비었다면 2) 리스트의 시작으로 사용하는 첫번째 태그 
+// ATAG_NONE 0x00000000 2 리스트의 끝으로 사용하는 빈 태그 
+// .
+// .
+// .
+// ATAG_CMDLINE 0x54410009 2 + ((cmdline의 길이 + 3) / 4) 커널로 전달되는 커맨드 라인 
+//
 __vet_atags:
 	tst	r2, #0x3			@ aligned?
 	bne	1f

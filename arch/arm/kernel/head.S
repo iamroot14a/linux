@@ -34,6 +34,8 @@
  * the least significant 16 bits to be 0x8000, but we could probably
  * relax this restriction to KERNEL_RAM_VADDR >= PAGE_OFFSET + 0x4000.
  */
+//k14AB : ./arch/arm/Makefile:   TEXT_OFFSET := $(textofs-y)
+//        ./arch/arm/Makefile:   textofs-y  := 0x00008000
 //k14AB : PAGE_OFFSET = 0x80000000, TEXT_OFFSET = 0x8000
 #define KERNEL_RAM_VADDR	(PAGE_OFFSET + TEXT_OFFSET)
 #if (KERNEL_RAM_VADDR & 0xffff) != 0x8000
@@ -183,8 +185,8 @@ ENDPROC(stext)
  *  r4 = physical page table address
  */
 __create_page_tables:
-//k14AB : r4 = PAGE_OFFSET + TEXT_OFFSET - PG_DIR_SIZE
-//             0x80000000  + 0x8000      - 0x4000     = 0x80004000
+//k14AB :  r4 = PAGE_OFFSET(r8) + TEXT_OFFSET - PG_DIR_SIZE
+// 0x80004000 = 0x80000000      + 0x8000      - 0x4000     
 	pgtbl	r4, r8				@ page table address
 
 	/*
@@ -229,6 +231,9 @@ __create_page_tables:
 #endif
 
 //k14AB : r8 = phys_offset, r9 = cpuid, r10 = procinfo
+//        r7 = ALT_SMP(.long   PMD_TYPE_SECT | PMD_SECT_AP_WRITE | PMD_SECT_AP_READ | \
+//                             PMD_SECT_AF | PMD_FLAGS_SMP | \mm_mmuflags)
+//        r7 = 0000 0000 0000 0001 0001 1100 0000 1110
 
 	ldr	r7, [r10, #PROCINFO_MM_MMUFLAGS] @ mm_mmuflags
 
@@ -244,6 +249,9 @@ __create_page_tables:
 	mov	r5, r5, lsr #SECTION_SHIFT
 	mov	r6, r6, lsr #SECTION_SHIFT
 
+//k14AB :  r4 = PAGE_OFFSET(r8) + TEXT_OFFSET - PG_DIR_SIZE
+// 0x80004000 = 0x80000000      + 0x8000      - 0x4000     
+
 1:	orr	r3, r7, r5, lsl #SECTION_SHIFT	@ flags + kernel base
 	str	r3, [r4, r5, lsl #PMD_ORDER]	@ identity mapping
 	cmp	r5, r6
@@ -253,6 +261,11 @@ __create_page_tables:
 	/*
 	 * Map our RAM from the start to the end of the kernel .bss section.
 	 */
+
+//k14AB : r8 = 0x80000000, r7 = mm_mmuflags
+//k14AB : r4 = 페이지 변환테이블 시작주소
+//           = PAGE_OFFSET(r8) + TEXT_OFFSET - PG_DIR_SIZE
+
 	add	r0, r4, #PAGE_OFFSET >> (SECTION_SHIFT - PMD_ORDER)
 	ldr	r6, =(_end - 1)
 	orr	r3, r8, r7
@@ -285,6 +298,7 @@ __create_page_tables:
 	 * Then map boot params address in r2 if specified.
 	 * We map 2 sections in case the ATAGs/DTB crosses a section boundary.
 	 */
+//k14AB : r8 = 0x80000000
 	mov	r0, r2, lsr #SECTION_SHIFT
 	movs	r0, r0, lsl #SECTION_SHIFT
 	subne	r3, r0, r8
@@ -365,9 +379,9 @@ ENDPROC(__create_page_tables)
 	.ltorg
 	.align
 __turn_mmu_on_loc:
-	.long	.
-	.long	__turn_mmu_on
-	.long	__turn_mmu_on_end
+	.long	.                       @ r3
+	.long	__turn_mmu_on           @ r5
+	.long	__turn_mmu_on_end       @ r6
 
 #if defined(CONFIG_SMP)
 	.text
@@ -559,10 +573,13 @@ __fixup_smp_on_up:
 	b	__do_fixup_smp_on_up
 ENDPROC(__fixup_smp)
 
+//k14AB : arch/arm/include/asm/assembler.h
+//        section .alt.smp.init
+//
 	.align
-1:	.word	.
-	.word	__smpalt_begin
-	.word	__smpalt_end
+1:	.word	.                        @ r3
+	.word	__smpalt_begin           @ r4
+	.word	__smpalt_end             @ r5
 
 	.pushsection .data
 	.globl	smp_on_up
@@ -577,7 +594,11 @@ __do_fixup_smp_on_up:
 	cmp	r4, r5
 	reths	lr
 	ldmia	r4!, {r0, r6}
-//k14AB : r6 = ALT_UP(.long 0), r0 = ALT_SMP(.long 1), r3 = virtTOphys(delta)
+//k14AB : arch/arm/include/asm/assembler.h
+//ex)     r0 = .long 9998b = ALT_SMP(.long 1) 의 주소,
+//        r6 = ALT_UP(.long 0),
+//        r3 = virtTOphys(delta)
+//        ALT_SMP(sssss) 에 ALT_UP(uuuu)를 저장
  ARM(	str	r6, [r0, r3]	)
  THUMB(	add	r0, r0, r3	)
 #ifdef __ARMEB__
@@ -623,11 +644,11 @@ __fixup_pv_table:
 	add	r5, r5, r3	@ adjust table end address
 	add	r6, r6, r3	@ adjust __pv_phys_pfn_offset address
 	add	r7, r7, r3	@ adjust __pv_offset address
-//k14AB : r0 = (PAGE_OFFSET(0x80000000) - delta)(r8) >> 12
+//k14AB : r0 = (PAGE_OFFSET(0x80000000) - delta)(r8) >> 12(PAGE_SHIFT)
 	mov	r0, r8, lsr #PAGE_SHIFT	@ convert to PFN
 	str	r0, [r6]	@ save computed PHYS_OFFSET to __pv_phys_pfn_offset
 	strcc	ip, [r7, #HIGH_OFFSET]	@ save to __pv_offset high bits
-//k14AB : 0h xxxx 0000 0000 0000
+//k14AB : 0h xx00 0000
 //        kernel/head.S는 compressed/head.S 에서 128M align 맞췄음
 	mov	r6, r3, lsr #24	@ constant for add/sub instructions
 	teq	r3, r6, lsl #24 @ must be 16MiB aligned
@@ -638,6 +659,8 @@ THUMB(	it	ne		@ cross section branch )
 	b	__fixup_a_pv_table
 ENDPROC(__fixup_pv_table)
 
+//k14AB : arch/arm/include/asm/memory.h
+//
 	.align
 1:	.long	.                    @ r3
 	.long	__pv_table_begin     @ r4

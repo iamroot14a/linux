@@ -90,8 +90,9 @@ SECTIONS
 		*(.discard)
 		*(.discard.*)
 	}
-
-//k14AB : PAGE_OFFSET = 0x8000000, TEXT_OFFSET = 0x8000
+/*
+k14AB : PAGE_OFFSET = 0x8000000, TEXT_OFFSET = 0x8000
+*/
 	. = PAGE_OFFSET + TEXT_OFFSET;
 	.head.text : {
 		_text = .;
