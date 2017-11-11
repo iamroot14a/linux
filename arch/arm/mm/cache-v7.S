@@ -31,10 +31,16 @@
  * to be called for both secondary cores startup and primary core resume
  * procedures.
  */
+
+//k14AB : Cache Size ID Register (CCSIDR)
+//        http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0438c/BABBAFJH.html
+//        Cache Size Selection Register (CSSELR)
+//        http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0438c/BABGHJEA.html
+
 ENTRY(v7_invalidate_l1)
        mov     r0, #0
-       mcr     p15, 2, r0, c0, c0, 0
-       mrc     p15, 1, r0, c0, c0, 0
+       mcr     p15, 2, r0, c0, c0, 0   @ Cache Size Selection Register (CSSELR)
+       mrc     p15, 1, r0, c0, c0, 0   @ Cache Size ID Register (CCSIDR)
 
        movw    r1, #0x7fff
        and     r2, r1, r0, lsr #13

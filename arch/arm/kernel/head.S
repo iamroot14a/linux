@@ -298,7 +298,9 @@ __create_page_tables:
 	 * Then map boot params address in r2 if specified.
 	 * We map 2 sections in case the ATAGs/DTB crosses a section boundary.
 	 */
-//k14AB : r8 = 0x80000000
+//k14AB : r8 = 0x80000000, r7 = mm_mmuflags
+//k14AB : r4 = 페이지 변환테이블 시작주소
+//           = PAGE_OFFSET(r8) + TEXT_OFFSET - PG_DIR_SIZE
 	mov	r0, r2, lsr #SECTION_SHIFT
 	movs	r0, r0, lsl #SECTION_SHIFT
 	subne	r3, r0, r8
@@ -671,7 +673,9 @@ ENDPROC(__fixup_pv_table)
 	.text
 __fixup_a_pv_table:
 /*k14AB :
-3:	.long	__pv_offset 위치에 delta 값
+3:	.quad	__pv_offset 위치에 delta 값
+ ====>  .long   __pv_offset + 0 (low)      : delta
+        .long   __pv_offset + 4 (high)     : 0, (-1)0xffffffff
  */
 	adr	r0, 3f
 	ldr	r6, [r0]
