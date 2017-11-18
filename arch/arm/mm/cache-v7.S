@@ -31,28 +31,34 @@
  * to be called for both secondary cores startup and primary core resume
  * procedures.
  */
-
+//k14AB : Cache Size Selection Register (CSSELR)
+//        http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0438c/BABGHJEA.html
 //k14AB : Cache Size ID Register (CCSIDR)
 //        http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0438c/BABBAFJH.html
-//        Cache Size Selection Register (CSSELR)
-//        http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0438c/BABGHJEA.html
+//
+// size :| 1| 1| 1| 1|        15       |      10       |    3   |
+// no   :|31|30|29|28|27             13|12            3|2      0|
+// name :|WT|WB|RA|WA|     NumSets     | Associativity |LineSize|
+//보정값:|  |  |  |  |    Index (-1)   |  NumWays (-1) |  (-2)  |
+// reg  :|  |  |  |  |       r2        |      r3       |   r0   |
 
 ENTRY(v7_invalidate_l1)
        mov     r0, #0
        mcr     p15, 2, r0, c0, c0, 0   @ Cache Size Selection Register (CSSELR)
        mrc     p15, 1, r0, c0, c0, 0   @ Cache Size ID Register (CCSIDR)
 
-       movw    r1, #0x7fff
+       movw    r1, #0x7fff             @ 15bit
        and     r2, r1, r0, lsr #13
 
-       movw    r1, #0x3ff
+       movw    r1, #0x3ff              @ 10bit
 
        and     r3, r1, r0, lsr #3      @ NumWays - 1
        add     r2, r2, #1              @ NumSets
 
-       and     r0, r0, #0x7
+       and     r0, r0, #0x7            @ 3bit
        add     r0, r0, #4      @ SetShift
 
+//k14AB : clz (count leading zero) MSB에서 부터 0의 갯수
        clz     r1, r3          @ WayShift
        add     r4, r3, #1      @ NumWays
 1:     sub     r2, r2, #1      @ NumSets--
