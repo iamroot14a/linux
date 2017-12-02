@@ -160,6 +160,14 @@ ENDPROC(lookup_processor_type)
  */
 __lookup_processor_type:
 //k14AB : add   r3, pc, #OFFSET
+
+/* K14AB: 2017년 11월 25일 20:52:38
+ * ------------------------------
+ * @r3 : physical address
+ * @r4 : virtual address
+ * r4(각 arch cpu value) 랑 r9(cpuid) 비교 하는 loop 
+ * 
+ */
 	adr	r3, __lookup_processor_type_data
 	ldmia	r3, {r4 - r6}
 	sub	r3, r3, r4			@ get offset between virt&phys

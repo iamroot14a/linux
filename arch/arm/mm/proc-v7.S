@@ -587,6 +587,23 @@ __v7_setup_stack:
 	/*
 	 * Standard v7 proc info content
 	 */
+
+/* K14AB: 2017년 11월 25일 19:02:52
+ * ------------------------------
+#define ALT_SMP(instr...)					\
+x00 9998:	instr
+#define ALT_UP(instr...)					\
+	.pushsection ".alt.smp.init", "a"			;\
+x04	.long	9998b ( x00) 						;\
+x08 9997:	instr							;\
+	.if . - 9997b == 2					;\
+		nop						;\
+	.endif							;\
+	.if . - 9997b != 4					;\
+		.error "ALT_UP() content must assemble to exactly 4 bytes";\
+	.endif							;\
+	.popsection
+ */
 .macro __v7_proc name, initfunc, mm_mmuflags = 0, io_mmuflags = 0, hwcaps = 0, proc_fns = v7_processor_functions
 	ALT_SMP(.long	PMD_TYPE_SECT | PMD_SECT_AP_WRITE | PMD_SECT_AP_READ | \
 			PMD_SECT_AF | PMD_FLAGS_SMP | \mm_mmuflags)
