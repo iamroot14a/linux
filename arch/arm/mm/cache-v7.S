@@ -59,6 +59,10 @@ ENTRY(v7_invalidate_l1)
        add     r0, r0, #4      @ SetShift
 
 //k14AB : clz (count leading zero) MSB에서 부터 0의 갯수
+// ex) 4 Ways
+//     r3 = 0b|0000 0000|0000 0000|0000 0000|0000 0011| 
+//     r4 = 4,  r1 = 0x30
+
        clz     r1, r3          @ WayShift
        add     r4, r3, #1      @ NumWays
 1:     sub     r2, r2, #1      @ NumSets--
@@ -67,6 +71,10 @@ ENTRY(v7_invalidate_l1)
        mov     r5, r3, lsl r1
        mov     r6, r2, lsl r0
        orr     r5, r5, r6      @ Reg = (Temp<<WayShift)|(NumSets<<SetShift)
+
+//k14AB : Invalidate Data Cache Line (using Set/Way)
+//        http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0360f/I1014942.html
+
        mcr     p15, 0, r5, c7, c6, 2
        bgt     2b
        cmp     r2, #0

@@ -24,6 +24,7 @@
 #define PMD_FLAGS_UP	PMD_SECT_WB
 
 /* PTWs cacheable, inner WBWA shareable, outer WBWA not shareable */
+//k14AB : http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.ddi0433c/CIHFDBEJ.html
 #define TTB_FLAGS_SMP	TTB_IRGN_WBWA|TTB_S|TTB_NOS|TTB_RGN_OC_WBWA
 #define PMD_FLAGS_SMP	PMD_SECT_WBWA|PMD_SECT_S
 
@@ -143,8 +144,8 @@ ENDPROC(cpu_v7_set_pte_ext)
 	 *   NS1 = PRRR[19] = 1		- normal shareable property
 	 *   NOS = PRRR[24+n] = 1	- not outer shareable
 	 */
-.equ	PRRR,	0xff0a81a8
-.equ	NMRR,	0x40e040e0
+.equ	PRRR,	0xff0a81a8 @ //|1111 1111|0000 1010|1000 0001|1010 1000|
+.equ	NMRR,	0x40e040e0 @ //|0100 0000|1110 0000|0100 0000|1110 0000|
 
 	/*
 	 * Macro for setting up the TTBRx and TTBCR registers.

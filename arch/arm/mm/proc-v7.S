@@ -501,6 +501,17 @@ __errata_finish:
 	mov	r10, #0
 	mcr	p15, 0, r10, c7, c5, 0		@ I+BTB cache invalidate
 #ifdef CONFIG_MMU
+
+//k14AB : http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.den0024a/CEGDBEJE.html
+//  => Cacheable and shareable memory attributes
+//
+//k14AB : r4 = r8 = 페이지변환테이블 시작주소(eg. 0x80004000)
+//      ttbr0(ap용)  = r4,  ttbr1(OS용) = r8
+//  PRRR =            |NOS7~NOS0| SBZ|NSDS|TR7 ~~~~~~~~~~~ TR0|
+//  PRRR = 0xff0a81a8 |1111 1111|0000|1010|1000 0001|1010 1000|
+//  NMRR =            |OR7 ~~~~~~~~~~~ OR0|IR7 ~~~~~~~~~~~~IR0|
+//  NMRR = 0x40e040e0 |0100 0000|1110 0000|0100 0000|1110 0000|
+//
 	mcr	p15, 0, r10, c8, c7, 0		@ invalidate I + D TLBs
 	v7_ttb_setup r10, r4, r5, r8, r3	@ TTBCR, TTBRx setup
 	ldr	r3, =PRRR			@ PRRR
@@ -521,6 +532,15 @@ __errata_finish:
 	mcr	p14, 6, r0, c0, c0, 0		@ stop userspace TEEHBR access
 1:
 #endif
+
+//k14AB : http://jake.dothome.co.kr/__v7_ca7mp_setup/
+//arm_v7_architecture_reference_manual.pdf 1705page
+//k14AB :               1098 7654 3210 9876 5432 1*98 7654 3210
+// clear =0x2120c302 = |0010 0001|0010 0000|1100 0011|0000 0010| r3
+//                   ~ |1101 1110|1101 1111|0011 1100|1111 1101| ~r3
+// mmuset=0x10c03c7d = |0001 0000|1100 0000|0011 1100|0111 1101| r6
+// ucset =0x00c01c7c = |0000 0000|1100 0000|0001 1100|0111 1100|
+//
 	adr	r3, v7_crval
 	ldmia	r3, {r3, r6}
  ARM_BE8(orr	r6, r6, #1 << 25)		@ big-endian page tables
