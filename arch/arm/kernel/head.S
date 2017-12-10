@@ -526,6 +526,7 @@ ENTRY(__turn_mmu_on)
 	instr_sync
 	mov	r3, r3
 	mov	r3, r13
+//k14AB : 20171209 여기까지 함
 	ret	r3
 __turn_mmu_on_end:
 ENDPROC(__turn_mmu_on)

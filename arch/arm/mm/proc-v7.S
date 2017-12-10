@@ -456,6 +456,8 @@ __v7_pj4b_setup:
 #endif /* CONFIG_CPU_PJ4B */
 
 __v7_setup:
+//k14AB :         add     r0 , pc , #xxxx
+//      adr 명령의 표현 제한때문에 아래와 같은 산식을 만듬
 	adr	r0, __v7_setup_stack_ptr
 	ldr	r12, [r0]
 	add	r12, r12, r0			@ the local stack
@@ -556,6 +558,7 @@ __errata_finish:
 
 	.align	2
 __v7_setup_stack_ptr:
+                              __v7_setup_stack - . + (__v7_setup_stack_ptr == .)
 	.word	PHYS_RELATIVE(__v7_setup_stack, .)
 ENDPROC(__v7_setup)
 

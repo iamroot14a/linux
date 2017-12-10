@@ -61,7 +61,7 @@ ENTRY(v7_invalidate_l1)
 //k14AB : clz (count leading zero) MSB에서 부터 0의 갯수
 // ex) 4 Ways
 //     r3 = 0b|0000 0000|0000 0000|0000 0000|0000 0011| 
-//     r4 = 4,  r1 = 0x30
+//     r4 = 4,  r1 = 30
 
        clz     r1, r3          @ WayShift
        add     r4, r3, #1      @ NumWays
