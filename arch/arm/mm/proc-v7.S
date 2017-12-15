@@ -558,7 +558,7 @@ __errata_finish:
 
 	.align	2
 __v7_setup_stack_ptr:
-                              __v7_setup_stack - . + (__v7_setup_stack_ptr == .)
+//k14AB :                      __v7_setup_stack - . + (__v7_setup_stack_ptr == .)
 	.word	PHYS_RELATIVE(__v7_setup_stack, .)
 ENDPROC(__v7_setup)
 
