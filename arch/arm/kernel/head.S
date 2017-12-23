@@ -265,6 +265,8 @@ __create_page_tables:
 //k14AB : r8 = 0x80000000, r7 = mm_mmuflags
 //k14AB : r4 = 페이지 변환테이블 시작주소
 //           = PAGE_OFFSET(r8) + TEXT_OFFSET - PG_DIR_SIZE
+// SECTION_SHIFT : 96
+// PMD_ORDER     : 2
 
 	add	r0, r4, #PAGE_OFFSET >> (SECTION_SHIFT - PMD_ORDER)
 	ldr	r6, =(_end - 1)
@@ -639,11 +641,18 @@ ENDPROC(fixup_smp)
  * can be expressed by an immediate shifter operand. The stub instruction
  * has a form of '(add|sub) rd, rn, #imm'.
  */
+
+/* K14AB: 2017년 12월 02일 15:54:28
+ * ------------------------------
+ * ip = r12
+ */
+
+
 	__HEAD
 __fixup_pv_table:
 	adr	r0, 1f
 	ldmia	r0, {r3-r7}
-	mvn	ip, #0
+	mvn	ip, #0         
 	subs	r3, r0, r3	@ PHYS_OFFSET - PAGE_OFFSET
 	add	r4, r4, r3	@ adjust table start address
 	add	r5, r5, r3	@ adjust table end address
