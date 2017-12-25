@@ -164,6 +164,9 @@ ENTRY(stext)
 #endif
 	ldr	r12, [r10, #PROCINFO_INITFUNC]
 	add	r12, r12, r10
+// k14AB : b 명령범위는  +- 128MB 
+//       ret 명령은 reg가 가리키는곳 어디나
+// 20171202 여기까지 함.
 	ret	r12
 1:	b	__enable_mmu
 ENDPROC(stext)
@@ -186,7 +189,7 @@ ENDPROC(stext)
  */
 __create_page_tables:
 //k14AB :  r4 = PAGE_OFFSET(r8) + TEXT_OFFSET - PG_DIR_SIZE
-// 0x80004000 = 0x80000000      + 0x8000      - 0x4000     
+//eg) 0x80004000 = 0x80000000      + 0x8000      - 0x4000     
 	pgtbl	r4, r8				@ page table address
 
 	/*
@@ -250,7 +253,7 @@ __create_page_tables:
 	mov	r6, r6, lsr #SECTION_SHIFT
 
 //k14AB :  r4 = PAGE_OFFSET(r8) + TEXT_OFFSET - PG_DIR_SIZE
-// 0x80004000 = 0x80000000      + 0x8000      - 0x4000     
+//eg) 0x80004000 = 0x80000000      + 0x8000      - 0x4000     
 
 1:	orr	r3, r7, r5, lsl #SECTION_SHIFT	@ flags + kernel base
 	str	r3, [r4, r5, lsl #PMD_ORDER]	@ identity mapping
@@ -262,8 +265,9 @@ __create_page_tables:
 	 * Map our RAM from the start to the end of the kernel .bss section.
 	 */
 
-//k14AB : r8 = 0x80000000, r7 = mm_mmuflags
+//k14AB : r8 = phys_offset eg) 0x80000000, r7 = mm_mmuflags
 //k14AB : r4 = 페이지 변환테이블 시작주소
+//           = PAGE_OFFSET(r8)0x80000000 + TEXT_OFFSET - PG_DIR_SIZE
 //           = PAGE_OFFSET(r8) + TEXT_OFFSET - PG_DIR_SIZE
 // SECTION_SHIFT : 96
 // PMD_ORDER     : 2
@@ -300,7 +304,7 @@ __create_page_tables:
 	 * Then map boot params address in r2 if specified.
 	 * We map 2 sections in case the ATAGs/DTB crosses a section boundary.
 	 */
-//k14AB : r8 = 0x80000000, r7 = mm_mmuflags
+//k14AB : r8 = phys_offset eg) 0x80000000, r7 = mm_mmuflags
 //k14AB : r4 = 페이지 변환테이블 시작주소
 //           = PAGE_OFFSET(r8) + TEXT_OFFSET - PG_DIR_SIZE
 	mov	r0, r2, lsr #SECTION_SHIFT
@@ -525,6 +529,7 @@ ENTRY(__turn_mmu_on)
 	instr_sync
 	mov	r3, r3
 	mov	r3, r13
+//k14AB : 20171209 여기까지 함
 	ret	r3
 __turn_mmu_on_end:
 ENDPROC(__turn_mmu_on)
@@ -662,7 +667,7 @@ __fixup_pv_table:
 	mov	r0, r8, lsr #PAGE_SHIFT	@ convert to PFN
 	str	r0, [r6]	@ save computed PHYS_OFFSET to __pv_phys_pfn_offset
 	strcc	ip, [r7, #HIGH_OFFSET]	@ save to __pv_offset high bits
-//k14AB : 0h xx00 0000
+//k14AB : 0h xx00 0000 => 0h 0000 00xx  == r6
 //        kernel/head.S는 compressed/head.S 에서 128M align 맞췄음
 	mov	r6, r3, lsr #24	@ constant for add/sub instructions
 	teq	r3, r6, lsl #24 @ must be 16MiB aligned
@@ -761,6 +766,16 @@ ARM_BE8(rev16	ip, ip)
 	str	ip, [r7, r3]
 //k14AB : __pv_table_begin     @ r4
 //k14AB : __pv_table_end       @ r5
+//
+//1:    add     t, x __PV_BITS_31_24  === ip
+//
+//__pv_table_begin             === r4
+//      .pushsection .pv_table, "a"
+//      .long  1b              === r7 = 1b
+//      .popsection
+//__pv_table_end               === r5
+//
+//
 2:	cmp	r4, r5
 	ldrcc	r7, [r4], #4	@ use branch for delay slot
 	bcc	1b
