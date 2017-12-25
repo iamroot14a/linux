@@ -593,6 +593,7 @@ void __init smp_setup_processor_id(void)
 {
 	int i;
 	u32 mpidr = is_smp() ? read_cpuid_mpidr() & MPIDR_HWID_BITMASK : 0;
+//k14AB :현재 동작중인 cpu id(번호)
 	u32 cpu = MPIDR_AFFINITY_LEVEL(mpidr, 0);
 
 	/* K14AB: 2017년 12월 23일 20:26:02
@@ -615,6 +616,7 @@ void __init smp_setup_processor_id(void)
 	 * using percpu variable early, for example, lockdep will
 	 * access percpu variable inside lock_release
 	 */
+//k14AB : percpu 변수의 offset 값 초기화
 
 	/* K14AB: 2017년 12월 23일 21:22:21
 	 * ------------------------------

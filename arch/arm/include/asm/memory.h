@@ -191,6 +191,12 @@ extern const void *__pv_table_begin, *__pv_table_end;
 #define PHYS_OFFSET	((phys_addr_t)__pv_phys_pfn_offset << PAGE_SHIFT)
 #define PHYS_PFN_OFFSET	(__pv_phys_pfn_offset)
 
+//k14AB : __pv_stub(x, t, "add", __PV_BITS_31_24);
+//1:    add     t, x __PV_BITS_31_24
+//      .pushsection .pv_table, "a"
+//      .long  1b
+//      .popsection
+//
 #define __pv_stub(from,to,instr,type)			\
 	__asm__("@ __pv_stub\n"				\
 	"1:	" instr "	%0, %1, %2\n"		\
