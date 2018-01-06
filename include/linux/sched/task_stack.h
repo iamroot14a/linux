@@ -52,6 +52,8 @@ static inline unsigned long *end_of_stack(struct task_struct *p)
 	return (unsigned long *)((unsigned long)task_thread_info(p) + THREAD_SIZE) - 1;
 #else
 	return (unsigned long *)(task_thread_info(p) + 1);
+//# define task_thread_info(task)	((struct thread_info *)(task)->stack)
+
 #endif
 }
 
