@@ -601,6 +601,7 @@ void __init smp_setup_processor_id(void)
 	 * MPIDR_AFFINITY_LEVEL(mpidr, 0) --> ((mpidr >> ( 8 * level)) & 0b 1111 1111)
 	 */
 	cpu_logical_map(0) = cpu;
+//k14AB : nr_cpu_ids = CONFIG_NR_CPUS // kernel/smp.c
 	for (i = 1; i < nr_cpu_ids; ++i)
 		cpu_logical_map(i) = i == cpu ? 0 : i;
 

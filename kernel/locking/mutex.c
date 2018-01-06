@@ -38,6 +38,8 @@
 void
 __mutex_init(struct mutex *lock, const char *name, struct lock_class_key *key)
 {
+//k14AB : atomic_long_set 은 include/asm-generic/atomic-long.h 에 #define 되어 있음
+//        => atomic_set 을 호출
 	atomic_long_set(&lock->owner, 0);
 	spin_lock_init(&lock->wait_lock);
 	INIT_LIST_HEAD(&lock->wait_list);
