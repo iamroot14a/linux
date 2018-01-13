@@ -229,6 +229,8 @@ extern struct cred init_cred;
  *  INIT_TASK is used to set up the first task table, touch at
  * your own risk!. Base=0, limit=0x1fffff (=2MB)
  */
+//k14AB : normal_prio = prio 의 백업
+//        user land 에서 nice 사용시 static_prio 변경
 #define INIT_TASK(tsk)	\
 {									\
 	INIT_TASK_TI(tsk)						\
