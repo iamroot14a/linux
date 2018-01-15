@@ -39,6 +39,11 @@
 
 /* These are for everybody (although not all archs will actually
    discard it in modules) */
+//k14AB : .init.text section 
+//        __cold 사용이 제한적이다. 사용회수가 적다..
+//        __inittrace : 적용안됨
+//        __latent_entropy : entropy를 높이는데 사용
+//
 #define __init		__section(.init.text) __cold __inittrace __latent_entropy
 #define __initdata	__section(.init.data)
 #define __initconst	__section(.init.rodata)
