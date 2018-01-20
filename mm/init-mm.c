@@ -17,11 +17,7 @@
 struct mm_struct init_mm = {
 	.mm_rb		= RB_ROOT,
 	.pgd		= swapper_pg_dir,
-//k14AB : mm_struct 사용하는 thread 갯수 
-//       왜 2로 시작????
 	.mm_users	= ATOMIC_INIT(2),
-//k14AB : process 기본값은 1, 커널이사용시 2
-//       mm_users = 0 이면 mm_count = mm_count - 1
 	.mm_count	= ATOMIC_INIT(1),
 	.mmap_sem	= __RWSEM_INITIALIZER(init_mm.mmap_sem),
 	.page_table_lock =  __SPIN_LOCK_UNLOCKED(init_mm.page_table_lock),

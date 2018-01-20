@@ -229,8 +229,6 @@ extern struct cred init_cred;
  *  INIT_TASK is used to set up the first task table, touch at
  * your own risk!. Base=0, limit=0x1fffff (=2MB)
  */
-//k14AB : normal_prio = prio 의 백업
-//        user land 에서 nice 사용시 static_prio 변경
 #define INIT_TASK(tsk)	\
 {									\
 	INIT_TASK_TI(tsk)						\
@@ -242,9 +240,6 @@ extern struct cred init_cred;
 	.static_prio	= MAX_PRIO-20,					\
 	.normal_prio	= MAX_PRIO-20,					\
 	.policy		= SCHED_NORMAL,					\
-/*k14AB : kernel 에서 지원한는 cpu의 mask                               \
-     ie) 4 cpu = 0000 0000 0000 0000 0000 0000 0000 1111                \
-*/                                                                      \
 	.cpus_allowed	= CPU_MASK_ALL,					\
 	.nr_cpus_allowed= NR_CPUS,					\
 	.mm		= NULL,						\
@@ -255,7 +250,6 @@ extern struct cred init_cred;
 	.se		= {						\
 		.group_node 	= LIST_HEAD_INIT(tsk.se.group_node),	\
 	},								\
-/*k14AB : 여기까지 20180106*/ \
 	.rt		= {						\
 		.run_list	= LIST_HEAD_INIT(tsk.rt.run_list),	\
 		.time_slice	= RR_TIMESLICE,				\
