@@ -17,6 +17,10 @@ static struct sighand_struct init_sighand = INIT_SIGHAND(init_sighand);
 
 /* Initial task structure */
 struct task_struct init_task = INIT_TASK(init_task);
+//k14AB : EXPORT_SYMBOL(init_task)
+//struct kernel_symbol {
+//	unsigned long value = &init_task
+//	const char *name = "init_task" 문자열  }
 EXPORT_SYMBOL(init_task);
 
 /*
