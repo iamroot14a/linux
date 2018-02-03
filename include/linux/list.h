@@ -665,6 +665,15 @@ static inline void hlist_del_init(struct hlist_node *n)
 	}
 }
 
+//k14AB : hlist_node들의 시작을 가리키는 hlist_head 에 hlist_node 를 추가
+//          h                           n1
+//    >>  first  ------------------>   next  -> NULL
+//    +-----------------------------   pprev
+//
+//          h    +->>   n2              n1
+//    >>  first--_--> next  ------->   next  -> NULL
+//    +----------_--- pprev   +-----   pprev
+//               +------------+
 static inline void hlist_add_head(struct hlist_node *n, struct hlist_head *h)
 {
 	struct hlist_node *first = h->first;

@@ -625,6 +625,8 @@ void __init smp_setup_processor_id(void)
 	 * 다들 수고 하셨습니다\( ^0^ )/
 	 */
 
+//k14AB : per_cpu 의 offset 를 가리키는 레지스터 
+//todo : 시작주소???
 	set_my_cpu_offset(0);
 
 	pr_info("Booting Linux on physical CPU 0x%x\n", mpidr);

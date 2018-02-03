@@ -86,7 +86,16 @@ register unsigned long current_stack_pointer asm ("sp");
 /*
  * how to get the thread information struct from C
  */
+//k14AB : __attribute_const__ 
+// 전달 받은 인수외에 global 변수에 접근할 수 없다 ==>> 최적화를 위한 힌트 ???
+// http://jake.dothome.co.kr/attr1/
+// http://infocenter.arm.com/help/index.jsp?topic=/com.arm.doc.dui0348bk/Cacgigch.html
 static inline struct thread_info *current_thread_info(void) __attribute_const__;
+
+//k14AB : THREAD_SIZE = PAGE_SIZE(4096) << THREAD_SIZE_ORDER(1)
+// sp     =>     hhhh hhhh hhhh hhhh hhh? ???? ???? ???? 
+//THREAD_SIZE => 1111 1111 1111 1111 1110 0000 0000 0000
+//               hhhh hhhh hhhh hhhh hhh0 0000 0000 0000
 
 static inline struct thread_info *current_thread_info(void)
 {
