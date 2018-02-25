@@ -110,6 +110,8 @@ static struct workqueue_struct *cgroup_destroy_wq;
 /* generate an array of cgroup subsystem pointers */
 #define SUBSYS(_x) [_x ## _cgrp_id] = &_x ## _cgrp_subsys,
 struct cgroup_subsys *cgroup_subsys[] = {
+//k14AB : SUBSYS(cpuset)
+//        [cpuset_cgrp_id] = &cpuset_cgrp_subsys,
 #include <linux/cgroup_subsys.h>
 };
 #undef SUBSYS
@@ -117,6 +119,8 @@ struct cgroup_subsys *cgroup_subsys[] = {
 /* array of cgroup subsystem names */
 #define SUBSYS(_x) [_x ## _cgrp_id] = #_x,
 static const char *cgroup_subsys_name[] = {
+//k14AB : SUBSYS(cpuset)
+//        [cpuset_cgrp_id] = "cpuset",
 #include <linux/cgroup_subsys.h>
 };
 #undef SUBSYS

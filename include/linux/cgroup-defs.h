@@ -37,6 +37,11 @@ struct seq_file;
 /* define the enumeration of all cgroup subsystems */
 #define SUBSYS(_x) _x ## _cgrp_id,
 enum cgroup_subsys_id {
+//k14AB : SUBSYS(cpuset)
+//        SUBSYS(cpu)
+//
+//        cpuset_cgrp_id,    =>> 0
+//        cpu_cgrp_id,       =>> 1
 #include <linux/cgroup_subsys.h>
 	CGROUP_SUBSYS_COUNT,
 };

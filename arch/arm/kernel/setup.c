@@ -741,6 +741,7 @@ static void __init setup_processor(void)
 	elf_hwcap = list->elf_hwcap;
 
 	cpuid_init_hwcaps();
+//k14AB : 20180224 여기까지
 	patch_aeabi_idiv();
 
 #ifndef CONFIG_ARM_THUMB
