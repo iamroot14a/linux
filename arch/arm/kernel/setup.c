@@ -755,6 +755,7 @@ static void __init setup_processor(void)
 	elf_hwcap_fixup();
 
 	cacheid_init();
+//k14AB : 20180303 여기까지
 	cpu_init();
 }
 
