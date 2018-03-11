@@ -565,16 +565,16 @@ void notrace cpu_init(void)
 	"mov	sp, r14\n\t"
 	"msr	cpsr_c, %9"
 	    :
-	    : "r" (stk),
-	      PLC (PSR_F_BIT | PSR_I_BIT | IRQ_MODE),
-	      "I" (offsetof(struct stack, irq[0])),
-	      PLC (PSR_F_BIT | PSR_I_BIT | ABT_MODE),
-	      "I" (offsetof(struct stack, abt[0])),
-	      PLC (PSR_F_BIT | PSR_I_BIT | UND_MODE),
-	      "I" (offsetof(struct stack, und[0])),
-	      PLC (PSR_F_BIT | PSR_I_BIT | FIQ_MODE),
-	      "I" (offsetof(struct stack, fiq[0])),
-	      PLC (PSR_F_BIT | PSR_I_BIT | SVC_MODE)
+	    : "r" (stk),                              // 0
+	      PLC (PSR_F_BIT | PSR_I_BIT | IRQ_MODE), // 1
+	      "I" (offsetof(struct stack, irq[0])),   // 2
+	      PLC (PSR_F_BIT | PSR_I_BIT | ABT_MODE), // 3
+	      "I" (offsetof(struct stack, abt[0])),   // 4
+	      PLC (PSR_F_BIT | PSR_I_BIT | UND_MODE), // 5
+	      "I" (offsetof(struct stack, und[0])),   // 6
+	      PLC (PSR_F_BIT | PSR_I_BIT | FIQ_MODE), // 7
+	      "I" (offsetof(struct stack, fiq[0])),   // 8
+	      PLC (PSR_F_BIT | PSR_I_BIT | SVC_MODE)  // 9
 	    : "r14");
 #endif
 }

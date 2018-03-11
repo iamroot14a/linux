@@ -94,6 +94,8 @@ extern void cpu_reset(unsigned long addr, bool hvc) __attribute__((noreturn));
 extern void cpu_do_suspend(void *);
 extern void cpu_do_resume(void *);
 #else
+//k14AB : processor._proc_init => cpu_v7_proc_init
+//
 #define cpu_proc_init			processor._proc_init
 #define cpu_proc_fin			processor._proc_fin
 #define cpu_reset			processor.reset
