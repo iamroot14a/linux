@@ -25,6 +25,15 @@
 #define _PAGE_USER_TABLE	(PMD_TYPE_TABLE | PMD_BIT4 | PMD_DOMAIN(DOMAIN_USER))
 #define _PAGE_KERNEL_TABLE	(PMD_TYPE_TABLE | PMD_BIT4 | PMD_DOMAIN(DOMAIN_KERNEL))
 
+/* K14AB: 2018년 03월 31일 20:55:53
+ * ------------------------------
+ * 
+ * #define _PAGE_KERNEL_TABLE	(PMD_TYPE_TABLE | PMD_BIT4 | PMD_DOMAIN(DOMAIN_KERNEL))
+ * 			  	(	1       | 0b10000  |   0 << 5 )
+ * 			  	-----------------------------------------
+ * 			  	    0b10001 = 17
+ */
+
 #ifdef CONFIG_ARM_LPAE
 
 static inline pmd_t *pmd_alloc_one(struct mm_struct *mm, unsigned long addr)
@@ -131,11 +140,16 @@ static inline void pte_free(struct mm_struct *mm, pgtable_t pte)
 static inline void __pmd_populate(pmd_t *pmdp, phys_addr_t pte,
 				  pmdval_t prot)
 {
-	pmdval_t pmdval = (pte + PTE_HWTABLE_OFF) | prot;
+	pmdval_t pmdval = (pte + PTE_HWTABLE_OFF) | prot; // (pte + 2048) | 17 
 	pmdp[0] = __pmd(pmdval);
 #ifndef CONFIG_ARM_LPAE
 	pmdp[1] = __pmd(pmdval + 256 * sizeof(pte_t));
 #endif
+
+	/* K14AB: 2018년 03월 31일 21:56:04
+	 * ------------------------------
+	 *  여기까지 함. 다음시간에 flush_pmd_entry 차례
+	 */
 	flush_pmd_entry(pmdp);
 }
 

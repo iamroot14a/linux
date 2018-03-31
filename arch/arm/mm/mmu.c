@@ -377,11 +377,27 @@ static pte_t *pte_offset_late_fixmap(pmd_t *dir, unsigned long addr)
 
 static inline pmd_t * __init fixmap_pmd(unsigned long addr)
 {
-	pgd_t *pgd = pgd_offset_k(addr);
-	pud_t *pud = pud_offset(pgd, addr);
-	pmd_t *pmd = pmd_offset(pud, addr);
 
-	return pmd;
+	//	param addr : (FIXADDR_TOP =  0xFFEFF000)
+	/* K14AB: 2018년 03월 31일 20:00:53
+	 * ------------------------------
+	 * KERNEL_RAM_VADDR = 0x80008000, PG_DIR_SIZE = 0x4000
+	 *        swapper_pg_dir = 0x80004000
+	 *        .globl  swapper_pg_dir
+	 *        .equ    swapper_pg_dir, KERNEL_RAM_VADDR - PG_DIR_SIZE
+	 * 
+	 * #define PGDIR_SHIFT					21
+	 * #define pgd_index(addr)		((addr) >> PGDIR_SHIFT)
+	 * #define pgd_offset(mm, addr)		((mm)->pgd + pgd_index(addr))
+	 * #define pgd_offset_k(addr)		pgd_offset(&init_mm, addr)
+	 */
+	             
+	pgd_t *pgd = pgd_offset_k(addr); // (0x80004000 + 0xFFEFF000 >> 21 ) = 0x80004000 + 0x7FF 
+	pud_t *pud = pud_offset(pgd, addr); // pud = pgd
+	pmd_t *pmd = pmd_offset(pud, addr); // pmd = pud
+					    // 고로, pmd = pgd
+
+	return pmd; // 0x800047FF
 }
 
 void __init early_fixmap_init(void)
@@ -392,6 +408,25 @@ void __init early_fixmap_init(void)
 	 * The early fixmap range spans multiple pmds, for which
 	 * we are not prepared:
 	 */
+
+	/* K14AB: 2018년 03월 31일 19:15:18
+	 * ------------------------------
+	 *         FIXADDR_TOP =  0xFFEFF000
+	 * #define FIXADDR_TOP		(FIXADDR_END - PAGE_SIZE)
+	 * #define __fix_to_virt(x)	(FIXADDR_TOP - ((x) << PAGE_SHIFT))
+	 * #define FIXADDR_START		0xffc00000UL
+	 * #define FIXADDR_END			0xfff00000UL
+	 *
+	 	0xfff00000
+		0x00001000
+		----------
+		0xFFEFF000
+	 * __end_of_early_ioremap_region = 225 = 0xE1
+	 * 0xFFEFF000 - (0xE1 << 12) = 0xFFE1E000
+	 * #define PMD_SHIFT		21
+	 * 0xFFE1E000 >> 21 = 0x7FF = 2047
+	 */
+
 	BUILD_BUG_ON((__fix_to_virt(__end_of_early_ioremap_region) >> PMD_SHIFT)
 		     != FIXADDR_TOP >> PMD_SHIFT);
 

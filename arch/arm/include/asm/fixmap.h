@@ -3,20 +3,29 @@
 
 #define FIXADDR_START		0xffc00000UL
 #define FIXADDR_END		0xfff00000UL
+
+/* K14AB: 2018년 03월 31일 19:11:43
+ * ------------------------------
+ * 
+		0xfff00000
+		0x00001000
+		----------
+		0xFFEFF000
+ */
 #define FIXADDR_TOP		(FIXADDR_END - PAGE_SIZE)
 
 #include <asm/kmap_types.h>
 #include <asm/pgtable.h>
 
 enum fixed_addresses {
-	FIX_EARLYCON_MEM_BASE,
-	__end_of_permanent_fixed_addresses,
+	FIX_EARLYCON_MEM_BASE,                                          /* 0 */
+	__end_of_permanent_fixed_addresses,				/* 1 */
 
-	FIX_KMAP_BEGIN = __end_of_permanent_fixed_addresses,
-	FIX_KMAP_END = FIX_KMAP_BEGIN + (KM_TYPE_NR * NR_CPUS) - 1,
+	FIX_KMAP_BEGIN = __end_of_permanent_fixed_addresses,		/* 1 */
+	FIX_KMAP_END = FIX_KMAP_BEGIN + (KM_TYPE_NR * NR_CPUS) - 1,	/* 64 = 1 + (16 * 4 ) -1   */
 
 	/* Support writing RO kernel text via kprobes, jump labels, etc. */
-	FIX_TEXT_POKE0,
+	FIX_TEXT_POKE0, 						/* 65 */
 	FIX_TEXT_POKE1,
 
 	__end_of_fixmap_region,
@@ -28,11 +37,11 @@ enum fixed_addresses {
 	 */
 #define NR_FIX_BTMAPS		32
 #define FIX_BTMAPS_SLOTS	7
-#define TOTAL_FIX_BTMAPS	(NR_FIX_BTMAPS * FIX_BTMAPS_SLOTS)
+#define TOTAL_FIX_BTMAPS	(NR_FIX_BTMAPS * FIX_BTMAPS_SLOTS)     	/* 224 = 32 * 7*/
 
-	FIX_BTMAP_END = __end_of_permanent_fixed_addresses,
-	FIX_BTMAP_BEGIN = FIX_BTMAP_END + TOTAL_FIX_BTMAPS - 1,
-	__end_of_early_ioremap_region
+	FIX_BTMAP_END = __end_of_permanent_fixed_addresses,		/* 1 */
+	FIX_BTMAP_BEGIN = FIX_BTMAP_END + TOTAL_FIX_BTMAPS - 1,         /* 224 = 1 + 224 - 1*/
+	__end_of_early_ioremap_region					/* 225 */
 };
 
 static const enum fixed_addresses __end_of_fixed_addresses =

@@ -249,6 +249,20 @@ static inline unsigned long __phys_to_virt(phys_addr_t x)
 	 * assembler expression receives 32 bit argument
 	 * in place where 'r' 32 bit operand is expected.
 	 */
+
+/* K14AB: 2018년 03월 10일 21:42:24
+ * ------------------------------
+
+#define __PV_BITS_31_24	0x81000000
+#define __PV_BITS_7_0	0x81
+#define __pv_stub(from,to,instr,type)	
+
+  __pv_stub(x, t, "sub", __PV_BITS_31_24);
+1:    sub     t, x, __PV_BITS_31_24
+      .pushsection .pv_table, "a"
+      .long  1b
+      .popsection
+ */
 	__pv_stub((unsigned long) x, t, "sub", __PV_BITS_31_24);
 	return t;
 }
