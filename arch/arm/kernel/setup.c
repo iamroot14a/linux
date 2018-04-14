@@ -1123,6 +1123,7 @@ void __init setup_arch(char **cmdline_p)
 	early_ioremap_init();
 
 	parse_early_param();
+//k14AB : 20180414 여기까지
 
 #ifdef CONFIG_MMU
 	early_mm_init(mdesc);

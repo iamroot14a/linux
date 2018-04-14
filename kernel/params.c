@@ -160,6 +160,7 @@ static int parse_one(char *param,
 	return -ENOENT;
 }
 
+//k14AB : boot_command_line "console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait"
 /* Args looks like "foo=bar,bar2 baz=fuz wiz". */
 char *parse_args(const char *doing,
 		 char *args,

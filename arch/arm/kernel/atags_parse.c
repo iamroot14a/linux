@@ -33,6 +33,7 @@
 #include "atags.h"
 
 static char default_command_line[COMMAND_LINE_SIZE] __initdata = CONFIG_CMDLINE;
+//k14AB : #define CONFIG_CMDLINE "console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait"
 
 #ifndef MEM_SIZE
 #define MEM_SIZE	(16*1024*1024)
@@ -183,6 +184,7 @@ setup_machine_tags(phys_addr_t __atags_pointer, unsigned int machine_nr)
 	struct tag *tags = (struct tag *)&default_tags;
 	const struct machine_desc *mdesc = NULL, *p;
 	char *from = default_command_line;
+//k14AB : #define CONFIG_CMDLINE "console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait"
 
 	default_tags.mem.start = PHYS_OFFSET;
 
@@ -232,6 +234,7 @@ setup_machine_tags(phys_addr_t __atags_pointer, unsigned int machine_nr)
 
 	/* parse_early_param needs a boot_command_line */
 	strlcpy(boot_command_line, from, COMMAND_LINE_SIZE);
+//k14AB : boot_command_line "console=ttyAMA0,115200 kgdboc=ttyAMA0,115200 root=/dev/mmcblk0p2 rootfstype=ext4 rootwait"
 
 	return mdesc;
 }
