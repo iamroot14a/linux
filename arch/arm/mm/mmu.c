@@ -392,12 +392,13 @@ static inline pmd_t * __init fixmap_pmd(unsigned long addr)
 	 * #define pgd_offset_k(addr)		pgd_offset(&init_mm, addr)
 	 */
 	             
-	pgd_t *pgd = pgd_offset_k(addr); // (0x80004000 + 0xFFEFF000 >> 21 ) = 0x80004000 + 0x7FF 
+	pgd_t *pgd = pgd_offset_k(addr); // (0x80004000 + 0xFFEFF000 >> 21 ) = 0x80004000 + 0x7FF * 8
+					 // pgd_t 는 u32 pgd[2] 이므로 *8 만큼 증가
 	pud_t *pud = pud_offset(pgd, addr); // pud = pgd
 	pmd_t *pmd = pmd_offset(pud, addr); // pmd = pud
 					    // 고로, pmd = pgd
 
-	return pmd; // 0x800047FF
+	return pmd; // 0x80007FF8
 }
 
 void __init early_fixmap_init(void)
