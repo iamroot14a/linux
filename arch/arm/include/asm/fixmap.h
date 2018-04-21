@@ -7,10 +7,10 @@
 /* K14AB: 2018년 03월 31일 19:11:43
  * ------------------------------
  * 
-		0xfff00000
-		0x00001000
-		----------
-		0xFFEFF000
+ *		0xfff00000 	FIXADDR_END
+ *		0x00001000	PAGE_SIZE
+ *		----------
+ *		0xFFEFF000 	FIXADDR_TOP
  */
 #define FIXADDR_TOP		(FIXADDR_END - PAGE_SIZE)
 
@@ -21,6 +21,12 @@ enum fixed_addresses {
 	FIX_EARLYCON_MEM_BASE,                                          /* 0 */
 	__end_of_permanent_fixed_addresses,				/* 1 */
 
+
+	/* K14AB: 2018년 04월 14일 16:34:36
+	 * ------------------------------
+	 * FIX_KMAP_BEGIN 이 왜 0 이 아니라 1 일까?
+	 * FIX_KMAP_END 는 왜 63 이 아니라 64 일까?
+	 */
 	FIX_KMAP_BEGIN = __end_of_permanent_fixed_addresses,		/* 1 */
 	FIX_KMAP_END = FIX_KMAP_BEGIN + (KM_TYPE_NR * NR_CPUS) - 1,	/* 64 = 1 + (16 * 4 ) -1   */
 

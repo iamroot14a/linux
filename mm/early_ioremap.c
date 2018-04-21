@@ -78,6 +78,12 @@ void __init early_ioremap_setup(void)
 		if (WARN_ON(prev_map[i]))
 			break;
 
+	/* K14AB: 2018년 04월 14일 21:05:04
+	 * ------------------------------
+	 * 
+	 * slot_virt[i] = __fix_to_virt(FIX_BTMAP_BEGIN - NR_FIX_BTMAPS*i);
+	 *                                    224       -    32        *i
+	 */
 	for (i = 0; i < FIX_BTMAPS_SLOTS; i++)
 		slot_virt[i] = __fix_to_virt(FIX_BTMAP_BEGIN - NR_FIX_BTMAPS*i);
 }

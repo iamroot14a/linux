@@ -18,7 +18,27 @@
 #include <linux/bug.h>
 
 
+/* K14AB: 2018년 04월 14일 17:08:02
+ * ------------------------------
+ * #define PAGE_SHIFT		12
+ * #define PAGE_SIZE		(_AC(1,UL) << PAGE_SHIFT)
+ * #define PAGE_MASK		(~((1 << PAGE_SHIFT) - 1))
+ * 
+ * 	   PAGE_MASK : 0b 1 0000 0000 0000
+ * 	                                 1
+ * 	              --------------------
+ * 	              0b    1111 1111 1111
+ * 	            
+ * 	   고로 PAGE_MASK 는    ~(0xFFFUL) = 0xF000
+ *
+ */
 
+/* K14AB: 2018년 04월 14일 17:17:19
+ * ------------------------------
+ * 
+ *		0xFFEFF000 	FIXADDR_TOP
+ */
+#define FIXADDR_TOP		(FIXADDR_END - PAGE_SIZE)
 #define __fix_to_virt(x)	(FIXADDR_TOP - ((x) << PAGE_SHIFT))
 #define __virt_to_fix(x)	((FIXADDR_TOP - ((x)&PAGE_MASK)) >> PAGE_SHIFT)
 
