@@ -68,6 +68,12 @@ void __init early_ioremap_setup(void)
 {
 	int i;
 
+//k14AB : 
+//#define NR_FIX_BTMAPS		32
+//#define FIX_BTMAPS_SLOTS	7
+//	FIX_BTMAP_BEGIN = FIX_BTMAP_END + TOTAL_FIX_BTMAPS - 1,         /* 224 = 1 + 224 - 1*/
+//	1 slot 당 32 page(128kByte)의 영역을 확보
+
 	for (i = 0; i < FIX_BTMAPS_SLOTS; i++)
 		if (WARN_ON(prev_map[i]))
 			break;
