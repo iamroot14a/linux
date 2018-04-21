@@ -64,6 +64,19 @@ pmdval_t user_pmd_table = _PAGE_USER_TABLE;
 
 static unsigned int cachepolicy __initdata = CPOLICY_WRITEBACK;
 static unsigned int ecc_mask __initdata = 0;
+
+//k14AB :
+//	pgprot_user   = L_PTE_PRESENT | L_PTE_YOUNG | PTE_EXT_PXN | 
+//	                L_PTE_MT_WRITEBACK | L_PTE_SHARED
+//	pgprot_kernel = L_PTE_PRESENT | L_PTE_YOUNG | L_PTE_DIRTY |
+//	                PTE_EXT_AF | L_PTE_MT_WRITEBACK | L_PTE_SHARED
+//	pgprot_hyp_device  =  PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED,
+//	pgprot_s2     = L_PTE_PRESENT | L_PTE_YOUNG | L_PTE_SHARED |
+//	                L_PTE_S2_MT_WRITEBACK
+//	pgprot_s2_device  = L_PTE_PRESENT|L_PTE_YOUNG|L_PTE_DIRTY|L_PTE_XN
+//			  s2_policy(L_PTE_S2_MT_DEV_SHARED) | L_PTE_SHARED
+//
+
 pgprot_t pgprot_user;
 pgprot_t pgprot_kernel;
 pgprot_t pgprot_hyp_device;
@@ -701,6 +714,36 @@ static void __init build_mem_type_table(void)
 
 	mem_types[MT_LOW_VECTORS].prot_pte |= vecs_pgprot;
 	mem_types[MT_HIGH_VECTORS].prot_pte |= vecs_pgprot;
+
+//k14AB :
+//	vecs_pgprot = kern_pgprot = user_pgprot = cp->pte; // cp->pte = L_PTE_MT_WRITEBACK
+//
+//	user_pgprot |= L_PTE_SHARED;
+//	user_pgprot |= PTE_EXT_PXN;
+//	==>> user_pgprot = PTE_EXT_PXN | L_PTE_MT_WRITEBACK | L_PTE_SHARED
+//
+//	kern_pgprot |= L_PTE_SHARED;
+//	kern_pgprot |= PTE_EXT_AF;
+//	==>> kern_pgprot = PTE_EXT_AF | L_PTE_MT_WRITEBACK | L_PTE_SHARED
+//
+//	s2_pgprot = cp->pte_s2 // pte_s2 = s2_policy(L_PTE_S2_MT_WRITEBACK),
+//	s2_pgprot |= L_PTE_SHARED;
+//	==>> s2_pgprot = L_PTE_SHARED | L_PTE_S2_MT_WRITEBACK
+//
+//	vecs_pgprot |= L_PTE_MT_VECTORS;
+//	vecs_pgprot |= PTE_EXT_AF;
+//	==>> vecs_pgprot = PTE_EXT_AF | L_PTE_MT_VECTORS | L_PTE_MT_WRITEBACK
+//
+//	hyp_device_pgprot = PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED,
+//
+//	#define PROT_PTE_DEVICE		L_PTE_PRESENT|L_PTE_YOUNG|L_PTE_DIRTY|L_PTE_XN
+//	#define PROT_PTE_S2_DEVICE	PROT_PTE_DEVICE
+//	#define PROT_SECT_DEVICE	PMD_TYPE_SECT|PMD_SECT_AP_WRITE
+//	#define L_PTE_S2_MT_DEV_SHARED		(_AT(pteval_t, 0x1) << 2) /* device */
+//	s2_device_pgprot = L_PTE_PRESENT|L_PTE_YOUNG|L_PTE_DIRTY|L_PTE_XN
+//				  s2_policy(L_PTE_S2_MT_DEV_SHARED) |
+//				  L_PTE_SHARED
+//
 
 	pgprot_user   = __pgprot(L_PTE_PRESENT | L_PTE_YOUNG | user_pgprot);
 	pgprot_kernel = __pgprot(L_PTE_PRESENT | L_PTE_YOUNG |
