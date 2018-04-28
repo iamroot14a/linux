@@ -42,6 +42,9 @@
  * The vmalloc() routines leaves a hole of 4kB between each vmalloced
  * area for the same reason. ;)
  */
+
+//k14AB : VMALLOC_END 변경 https://github.com/iamroot14a/linux/commit/6ff0966052c46efb53980b8a1add2e7b49c9f560
+//
 #define VMALLOC_OFFSET		(8*1024*1024)
 #define VMALLOC_START		(((unsigned long)high_memory + VMALLOC_OFFSET) & ~(VMALLOC_OFFSET-1))
 #define VMALLOC_END		0xff800000UL

@@ -69,7 +69,7 @@ static unsigned int ecc_mask __initdata = 0;
 //	pgprot_user   = L_PTE_PRESENT | L_PTE_YOUNG | PTE_EXT_PXN | 
 //	                L_PTE_MT_WRITEBACK | L_PTE_SHARED
 //	pgprot_kernel = L_PTE_PRESENT | L_PTE_YOUNG | L_PTE_DIRTY |
-//	                PTE_EXT_AF | L_PTE_MT_WRITEBACK | L_PTE_SHARED
+//	                L_PTE_MT_WRITEBACK | L_PTE_SHARED
 //	pgprot_hyp_device  =  PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED,
 //	pgprot_s2     = L_PTE_PRESENT | L_PTE_YOUNG | L_PTE_SHARED |
 //	                L_PTE_S2_MT_WRITEBACK
@@ -722,17 +722,16 @@ static void __init build_mem_type_table(void)
 //	user_pgprot |= PTE_EXT_PXN;
 //	==>> user_pgprot = PTE_EXT_PXN | L_PTE_MT_WRITEBACK | L_PTE_SHARED
 //
+//
 //	kern_pgprot |= L_PTE_SHARED;
-//	kern_pgprot |= PTE_EXT_AF;
-//	==>> kern_pgprot = PTE_EXT_AF | L_PTE_MT_WRITEBACK | L_PTE_SHARED
+//	==>> kern_pgprot = L_PTE_MT_WRITEBACK | L_PTE_SHARED
 //
 //	s2_pgprot = cp->pte_s2 // pte_s2 = s2_policy(L_PTE_S2_MT_WRITEBACK),
 //	s2_pgprot |= L_PTE_SHARED;
 //	==>> s2_pgprot = L_PTE_SHARED | L_PTE_S2_MT_WRITEBACK
 //
 //	vecs_pgprot |= L_PTE_MT_VECTORS;
-//	vecs_pgprot |= PTE_EXT_AF;
-//	==>> vecs_pgprot = PTE_EXT_AF | L_PTE_MT_VECTORS | L_PTE_MT_WRITEBACK
+//	==>> vecs_pgprot = L_PTE_MT_VECTORS | L_PTE_MT_WRITEBACK
 //
 //	hyp_device_pgprot = PROT_PTE_DEVICE | L_PTE_MT_DEV_SHARED | L_PTE_SHARED,
 //
@@ -1207,6 +1206,11 @@ void __init debug_ll_io_init(void)
 }
 #endif
 
+//k14AB : #define VMALLOC_OFFSET	(8*1024*1024)
+//k14AB : #define VMALLOC_END		0xff800000UL
+//240 = 0xf0, 0xf0 << 20 = 0x0f000000
+// vmalloc_min = 0xff800000 - 0x0f000000 - 0x00800000 = 0xf0000000
+
 static void * __initdata vmalloc_min =
 	(void *)(VMALLOC_END - (240 << 20) - VMALLOC_OFFSET);
 
@@ -1252,6 +1256,15 @@ void __init adjust_lowmem_bounds(void)
 	 * and may itself be outside the valid range for which phys_addr_t
 	 * and therefore __pa() is defined.
 	 */
+//k14AB : vmalloc_min = 0xf0000000 = 0xff800000 - 0x0f000000 - 0x00800000
+//        PAGE_OFFSET = 0x80000000
+//        PHYS_OFFSET 은 PAGE_OFFSET의 물리주소
+//     if PHYS_OFFSET 0xa000 0000 인 경우
+//        vmalloc_limit = (u64)0xf0000000 - 0x80000000 + 0xa0000000 = 0x0001 1000 0000
+//
+//     if PHYS_OFFSET 0x6000 0000 인 경우
+//        vmalloc_limit = (u64)0xf0000000 - 0x80000000 + 0x60000000 = 0x0000 d000 0000
+//
 	vmalloc_limit = (u64)(uintptr_t)vmalloc_min - PAGE_OFFSET + PHYS_OFFSET;
 
 	for_each_memblock(memory, reg) {
@@ -1283,6 +1296,7 @@ void __init adjust_lowmem_bounds(void)
 			 * allocated when mapping the start of bank 0, which
 			 * occurs before any free memory is mapped.
 			 */
+//k14AB : PMD_SIZE = 2M
 			if (!memblock_limit) {
 				if (!IS_ALIGNED(block_start, PMD_SIZE))
 					memblock_limit = block_start;
@@ -1292,7 +1306,7 @@ void __init adjust_lowmem_bounds(void)
 
 		}
 	}
-
+//k14AB : 20180428 여기까지
 	arm_lowmem_limit = lowmem_limit;
 
 	high_memory = __va(arm_lowmem_limit - 1) + 1;
