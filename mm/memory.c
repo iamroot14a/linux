@@ -100,6 +100,10 @@ EXPORT_SYMBOL(mem_map);
  * highstart_pfn must be the same; there must be no gap between ZONE_NORMAL
  * and ZONE_HIGHMEM.
  */
+//k14AB : 20180430
+//        마지막 memblock의 block_end(region.base + size)
+//        단, vmalloc_limit 보다크면 vmalloc_limit 
+//        의 가상주소 = direct mapping 되는 최종 주소
 void *high_memory;
 EXPORT_SYMBOL(high_memory);
 

@@ -1240,6 +1240,9 @@ static int __init early_vmalloc(char *arg)
 }
 early_param("vmalloc", early_vmalloc);
 
+//k14AB : 마지막 memblock의 block_end(region.base + size)
+//        단, vmalloc_limit 보다크면 vmalloc_limit
+//
 phys_addr_t arm_lowmem_limit __initdata = 0;
 
 void __init adjust_lowmem_bounds(void)
@@ -1258,12 +1261,14 @@ void __init adjust_lowmem_bounds(void)
 	 */
 //k14AB : vmalloc_min = 0xf0000000 = 0xff800000 - 0x0f000000 - 0x00800000
 //        PAGE_OFFSET = 0x80000000
-//        PHYS_OFFSET 은 PAGE_OFFSET의 물리주소
+//        PHYS_OFFSET 은 PAGE_OFFSET의 물리주소 (커널 시작 물리주소)
 //     if PHYS_OFFSET 0xa000 0000 인 경우
 //        vmalloc_limit = (u64)0xf0000000 - 0x80000000 + 0xa0000000 = 0x0001 1000 0000
 //
 //     if PHYS_OFFSET 0x6000 0000 인 경우
 //        vmalloc_limit = (u64)0xf0000000 - 0x80000000 + 0x60000000 = 0x0000 d000 0000
+//
+//        vmalloc_limit 는 vmalloc 의 최하위 물리 주소
 //
 	vmalloc_limit = (u64)(uintptr_t)vmalloc_min - PAGE_OFFSET + PHYS_OFFSET;
 
@@ -1307,6 +1312,11 @@ void __init adjust_lowmem_bounds(void)
 		}
 	}
 //k14AB : 20180428 여기까지
+//
+//k14AB :
+//      lowmem_limit 는 마지막 memblock의 block_end 단, vmalloc_limit 보다크면 vmalloc_limit
+//      memblock_limit 는 PMD_SIZE 로 align 되지않은 첫 memblock의 block_start or lowmem_limit
+//
 	arm_lowmem_limit = lowmem_limit;
 
 	high_memory = __va(arm_lowmem_limit - 1) + 1;

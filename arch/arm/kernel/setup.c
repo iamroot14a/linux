@@ -1136,6 +1136,7 @@ void __init setup_arch(char **cmdline_p)
 	 * before reserving/allocating any mmeory
 	 */
 	adjust_lowmem_bounds();
+//k14AB :  20180512 여기까지
 	arm_memblock_init(mdesc);
 	/* Memory may have been removed so recalculate the bounds. */
 	adjust_lowmem_bounds();
