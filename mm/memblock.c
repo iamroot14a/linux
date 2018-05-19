@@ -524,6 +524,29 @@ int __init_memblock memblock_add_range(struct memblock_type *type,
 		type->total_size = size;
 		return 0;
 	}
+//k14AB : 경우의 수 예시
+//                       --- end
+//                        |
+//                       (5)
+// ---  end               |
+//  |                    --- base
+//  |       --- end
+//  |        |
+//  |       (4)          ------- rend
+//  |        |           |     |          --- end
+//  |        |           |     |           | 
+//  |       --- base     |(idx)|          (3)
+// (6)                   |     |           | 
+//  |       --- end      |     |          --- base
+//  |        |           ------- rbase
+//  |       (2)
+//  |        |
+//  |       --- base
+//  |                    --- end
+// --- base               |
+//                       (1)
+//                        |
+//                       --- base
 repeat:
 	/*
 	 * The following is executed twice.  Once with %false @insert and
@@ -537,14 +560,17 @@ repeat:
 		phys_addr_t rbase = rgn->base;
 		phys_addr_t rend = rbase + rgn->size;
 
+//k14AB : 예시 (1)번
 		if (rbase >= end)
 			break;
+//k14AB : 예시 (5)번
 		if (rend <= base)
 			continue;
 		/*
 		 * @rgn overlaps.  If it separates the lower part of new
 		 * area, insert that portion.
 		 */
+//k14AB : 예시 (2)번
 		if (rbase > base) {
 #ifdef CONFIG_HAVE_MEMBLOCK_NODE_MAP
 			WARN_ON(nid != memblock_get_region_node(rgn));
@@ -560,6 +586,7 @@ repeat:
 		base = min(rend, end);
 	}
 
+//k14AB : 예시 (1)번
 	/* insert the remaining portion */
 	if (base < end) {
 		nr_new++;
@@ -570,6 +597,8 @@ repeat:
 
 	if (!nr_new)
 		return 0;
+
+//k14AB :20180519 여기까지
 
 	/*
 	 * If this was the first round, resize array and repeat for actual
