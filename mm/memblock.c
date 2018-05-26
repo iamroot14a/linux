@@ -147,6 +147,13 @@ __memblock_find_range_top_down(phys_addr_t start, phys_addr_t end,
 	phys_addr_t this_start, this_end, cand;
 	u64 i;
 
+//k14AB : 20180526
+//        start : free memblock을 찾을 시작주소 (if 전체에서 찾을경우 0)
+//        end   : free memblock을 찾을 종료주소 (if 전체에서 찾을겨우 0xffffffff)
+//   this_start : 찾은 free memblock 시작주소
+//   this_end   : 찾은 free memblock 종료주소 
+//        size  : 필요한 free memory 크기
+
 	for_each_free_mem_range_reverse(i, nid, flags, &this_start, &this_end,
 					NULL) {
 		this_start = clamp(this_start, start, end);
@@ -1024,6 +1031,29 @@ void __init_memblock __next_mem_range_rev(u64 *idx, int nid, ulong flags,
 		else
 			idx_b = 0;
 	}
+//k14AB : 경우의 수 예시 20180526
+//                                           --- m_end
+//                           :                |
+//                       |   :    |          (5)
+// ---  m_end            |        |           |
+//  |                    | idx_b  |          --- m_start
+//  |       --- m_end    |(reserve|
+//  |        |           |        |
+//  |       (4)          ---------- r_end
+//  |        |           |        |          --- m_end
+//  |        |           |        |           | 
+//  |       --- m_start  |free_mem|         (3)
+// (6)                   |        |           | 
+//  |       --- m_end    |        |          --- m_start
+//  |        |           ---------- r_start
+//  |       (2)          |        |
+//  |        |           |        |
+//  |       --- m_start  | idx_b-1|
+//  |                    |(reserve|          --- m_end
+// --- m_start           |   :    |           |
+//                           :               (1)
+//                           :                |
+//                                           --- m_start
 
 	for (; idx_a >= 0; idx_a--) {
 		struct memblock_region *m = &type_a->regions[idx_a];
