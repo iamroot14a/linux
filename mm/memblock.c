@@ -525,13 +525,13 @@ int __init_memblock memblock_add_range(struct memblock_type *type,
 		return 0;
 	}
 //k14AB : 경우의 수 예시
-//                       --- end
-//                        |
-//                       (5)
-// ---  end               |
-//  |                    --- base
-//  |       --- end
-//  |        |
+//                                        --- end
+//                          :              |
+//                       |  :  |          (5)
+// ---  end              |     |           |
+//  |                    |idx+1|          --- base
+//  |       --- end      |     |
+//  |        |           |     |
 //  |       (4)          ------- rend
 //  |        |           |     |          --- end
 //  |        |           |     |           | 
@@ -539,14 +539,14 @@ int __init_memblock memblock_add_range(struct memblock_type *type,
 // (6)                   |     |           | 
 //  |       --- end      |     |          --- base
 //  |        |           ------- rbase
-//  |       (2)
-//  |        |
-//  |       --- base
-//  |                    --- end
-// --- base               |
-//                       (1)
-//                        |
-//                       --- base
+//  |       (2)          |     |
+//  |        |           |     |
+//  |       --- base     |idx-1|
+//  |                    |     |          --- end
+// --- base              |  :  |           |
+//                          :             (1)
+//                          :              |
+//                                        --- base
 repeat:
 	/*
 	 * The following is executed twice.  Once with %false @insert and
