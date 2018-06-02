@@ -673,15 +673,42 @@ static int __init_memblock memblock_isolate_range(struct memblock_type *type,
 		if (memblock_double_array(type, base, size) < 0)
 			return -ENOMEM;
 
+//k14AB : 경우의 수 예시
+//                                        --- end
+//                          :              |
+//                       |  :  |          (5)
+// ---  end              |     |           |
+//  |                    |idx+1|          --- base
+//  |       --- end      |     |
+//  |        |           |     |
+//  |       (4)          ------- rend
+//  |        |           |     |          --- end
+//  |        |           |     |           | 
+//  |       --- base     |(idx)|          (3)
+// (6)                   |     |           | 
+//  |       --- end      |     |          --- base
+//  |        |           ------- rbase
+//  |       (2)          |     |
+//  |        |           |     |
+//  |       --- base     |idx-1|
+//  |                    |     |          --- end
+// --- base              |  :  |           |
+//                          :             (1)
+//                          :              |
+//                                        --- base
+
 	for_each_memblock_type(type, rgn) {
 		phys_addr_t rbase = rgn->base;
 		phys_addr_t rend = rbase + rgn->size;
 
+//k14AB : (1)인경우 
 		if (rbase >= end)
 			break;
+//k14AB : (5)인경우
 		if (rend <= base)
 			continue;
 
+//k14AB : (3,4)인경우
 		if (rbase < base) {
 			/*
 			 * @rgn intersects from below.  Split and continue
@@ -693,6 +720,7 @@ static int __init_memblock memblock_isolate_range(struct memblock_type *type,
 			memblock_insert_region(type, idx, rbase, base - rbase,
 					       memblock_get_region_node(rgn),
 					       rgn->flags);
+//k14AB : (2)인경우, (2,3)인 경우에 다시 들어올때
 		} else if (rend > end) {
 			/*
 			 * @rgn intersects from above.  Split and redo the
@@ -704,6 +732,7 @@ static int __init_memblock memblock_isolate_range(struct memblock_type *type,
 			memblock_insert_region(type, idx--, rbase, end - rbase,
 					       memblock_get_region_node(rgn),
 					       rgn->flags);
+//k14AB : (6, (rbase == base && rend <= end))인경우
 		} else {
 			/* @rgn is fully contained, record it */
 			if (!*end_rgn)
@@ -1039,13 +1068,13 @@ void __init_memblock __next_mem_range_rev(u64 *idx, int nid, ulong flags,
 //  |                    | idx_b  |          --- m_start
 //  |       --- m_end    |(reserve|
 //  |        |           |        |
-//  |       (4)          ---------- r_end
-//  |        |           |        |          --- m_end
-//  |        |           |        |           | 
-//  |       --- m_start  |free_mem|         (3)
-// (6)                   |        |           | 
-//  |       --- m_end    |        |          --- m_start
-//  |        |           ---------- r_start
+//  |       (4)          +--------+ r_end
+//  |        |           .        .          --- m_end
+//  |        |           .        .           | 
+//  |       --- m_start  .free_mem.         (3)
+// (6)                   .        .           | 
+//  |       --- m_end    .        .          --- m_start
+//  |        |           +--------+ r_start
 //  |       (2)          |        |
 //  |        |           |        |
 //  |       --- m_start  | idx_b-1|
