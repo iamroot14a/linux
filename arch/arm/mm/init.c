@@ -285,6 +285,7 @@ void __init arm_memblock_init(const struct machine_desc *mdesc)
 	arm_initrd_init();
 
 	arm_mm_memblock_reserve();
+//k14AB : 20180602 여기까지
 
 	/* reserve any platform specific memblock areas */
 	if (mdesc->reserve)
