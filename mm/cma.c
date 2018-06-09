@@ -273,6 +273,10 @@ int __init cma_declare_contiguous(phys_addr_t base,
 	 * migratetype page by page allocator's buddy algorithm. In the case,
 	 * you couldn't get a contiguous memory, which is not what we want.
 	 */
+//k14AB :   10 = max_t(unsigned long, MAX_ORDER - 1, pageblock_order));
+//          MAX_ORDER - 1 = 10 
+//          pageblock_order = 9
+//          alignment = 4MB
 	alignment = max(alignment,  (phys_addr_t)PAGE_SIZE <<
 			  max_t(unsigned long, MAX_ORDER - 1, pageblock_order));
 	base = ALIGN(base, alignment);

@@ -109,6 +109,9 @@ EXPORT_SYMBOL(arm_dma_zone_size);
  * allocations.  This must be the smallest DMA mask in the system,
  * so a successful GFP_DMA allocation will always satisfy this.
  */
+//k14AB : mm.h
+// #define arm_dma_limit ((phys_addr_t)~0)
+// #define arm_dma_pfn_limit (~0ul >> PAGE_SHIFT)
 phys_addr_t arm_dma_limit;
 unsigned long arm_dma_pfn_limit;
 

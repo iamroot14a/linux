@@ -467,6 +467,10 @@ struct dma_contig_early_reserve {
 	unsigned long size;
 };
 
+//k14AB : 20180609
+//        dma_mmu_remap[0] 에
+//        cma 영역으로 CONFIG에서 5MB, 4MB align에 의해 8MB가 확보됨 
+//
 static struct dma_contig_early_reserve dma_mmu_remap[MAX_CMA_AREAS] __initdata;
 
 static int dma_mmu_remap_num __initdata;

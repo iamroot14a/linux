@@ -571,6 +571,8 @@ EXPORT_SYMBOL_GPL(of_fdt_unflatten_tree);
 int __initdata dt_root_addr_cells;
 int __initdata dt_root_size_cells;
 
+//k14AB : 20180609
+//setup_machine_fdt(__atags_pointer) ->> early_init_dt_verify(phys_to_virt(dt_phys))
 void *initial_boot_params;
 
 #ifdef CONFIG_OF_EARLY_FLATTREE
