@@ -1007,6 +1007,30 @@ static void __init __create_mapping(struct mm_struct *mm, struct map_desc *md,
 	}
 #endif
 
+//k14AB : 20180616
+//https://github.com/iamroot14a/linux/commit/7b9c7b4d07fd8981193a2c4ecb650566f42d1219
+// [ARM] Fix non-page aligned boot time mappings
+//
+// AT91SAM9260 stopped booting with the recent changes to MM
+// initialisation - it was asking for a non-aligned virtual address
+// which caused loops to be non-terminal.  Fix this by rounding
+// virtual addresses down, but remember to include the offset in
+// the length, and round the length up to the following page.
+//
+// This means that asking for a mapping of 4K starting at 2K into
+// a page maps two pages as one would expect.
+//
+// AT91SAM9260은 MM 초기화에 대한 최근 변경 사항으로 부팅을 중단했습니다. 루프를 비 종단으로 만드는 비 정렬 가상 주소를 요구했습니다.
+//   가상 주소를 반올림하여이 문제를 해결할 수 있지만 길이에 오프셋을 포함하고 길이를 다음 페이지까지 반올림해야합니다.
+//
+//   즉, 2K에서 시작하는 4K의 매핑을 요청하면 예상대로 두 페이지가 매핑됩니다.
+//
+//	-	addr = md->virtual;
+//	+	addr = md->virtual & PAGE_MASK;
+//		phys = (unsigned long)__pfn_to_phys(md->pfn);
+//	-	length = PAGE_ALIGN(md->length);
+//	+	length = PAGE_ALIGN(md->length + (md->virtual & ~PAGE_MASK));
+//
 	addr = md->virtual & PAGE_MASK;
 	phys = __pfn_to_phys(md->pfn);
 	length = PAGE_ALIGN(md->length + (md->virtual & ~PAGE_MASK));
@@ -1727,6 +1751,7 @@ void __init paging_init(const struct machine_desc *mdesc)
 	void *zero_page;
 
 	prepare_page_table();
+//k14AB : 20180616 여기까지
 	map_lowmem();
 	memblock_set_current_limit(arm_lowmem_limit);
 	dma_contiguous_remap();
