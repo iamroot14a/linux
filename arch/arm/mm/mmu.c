@@ -826,6 +826,10 @@ static pte_t * __init arm_pte_alloc(pmd_t *pmd, unsigned long addr,
 		pte_t *pte = alloc(PTE_HWTABLE_OFF + PTE_HWTABLE_SIZE);
 		__pmd_populate(pmd, __pa(pte), prot);
 	}
+//k14AB : 20180623 
+//      pmd_bad = PMD_TYPE_SECT(2) 체크
+//      section(1M단위) 으로 관리되는 곳에서 pte 생성시 오류
+//      pte 는 4K 단위로 관리
 	BUG_ON(pmd_bad(*pmd));
 	return pte_offset_kernel(pmd, addr);
 }
@@ -896,6 +900,9 @@ static void __init alloc_init_pmd(pud_t *pud, unsigned long addr,
 		 * Try a section mapping - addr, next and phys must all be
 		 * aligned to a section boundary.
 		 */
+//k14AB : 20180623
+//        section 단위로 align 되어있는 경우(예:커널영역)는 pte를 만들지 않고 pmd만으로 사용
+//        즉 arm의 1차변환테이블만 사용
 		if (type->prot_sect &&
 				((addr | next | phys) & ~SECTION_MASK) == 0) {
 			__map_init_section(pmd, addr, next, phys, type, ng);
@@ -1754,6 +1761,7 @@ void __init paging_init(const struct machine_desc *mdesc)
 //k14AB : 20180616 여기까지
 	map_lowmem();
 	memblock_set_current_limit(arm_lowmem_limit);
+//k14AB : 20180623 여기까지
 	dma_contiguous_remap();
 	early_fixmap_shutdown();
 	devicemaps_init(mdesc);
