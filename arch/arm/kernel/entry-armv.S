@@ -1072,6 +1072,7 @@ ENDPROC(vector_\name)
 1:
 	.endm
 
+kdy_stubs_section:
 	.section .stubs, "ax", %progbits
 	@ This must be the first word
 	.word	vector_swi
@@ -1213,6 +1214,7 @@ vector_addrexcptn:
 	.globl	vector_fiq
 
 	.section .vectors, "ax", %progbits
+kdy_L__vectors_start:
 .L__vectors_start:
 	W(b)	vector_rst
 	W(b)	vector_und

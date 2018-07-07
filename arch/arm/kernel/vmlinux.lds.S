@@ -173,6 +173,9 @@ k14AB : PAGE_OFFSET = 0x80000000, TEXT_OFFSET = 0x8000
 	 */
 	__vectors_start = .;
 	.vectors 0xffff0000 : AT(__vectors_start) {
+/*k14AB :
+ * kdy_L__vectors_start
+ */
 		*(.vectors)
 	}
 	. = __vectors_start + SIZEOF(.vectors);
@@ -180,6 +183,9 @@ k14AB : PAGE_OFFSET = 0x80000000, TEXT_OFFSET = 0x8000
 
 	__stubs_start = .;
 	.stubs ADDR(.vectors) + 0x1000 : AT(__stubs_start) {
+/*k14AB :
+ * kdy_stubs_section
+ */
 		*(.stubs)
 	}
 	. = __stubs_start + SIZEOF(.stubs);

@@ -144,6 +144,19 @@ static inline void nop_dma_map_area(const void *s, size_t l, int f) { }
 static inline void nop_dma_unmap_area(const void *s, size_t l, int f) { }
 #endif
 
+//k14AB : 20180702 
+//        arch/arm/mm/cache-v7.S
+//        _CACHE = v7
+//        _CACHE,_flush_user_cache_range => v7_flush_user_cache_range
+//        v7_flush_icache_all
+//        v7_flush_kern_cache_all
+//        v7_flush_kern_cache_louis
+//        v7_flush_user_cache_all
+//        v7_flush_user_cache_range
+//        v7_coherent_kern_range
+//        v7_coherent_user_range
+//        v7_flush_kern_dcache_area
+//
 #ifndef MULTI_CACHE
 #define __cpuc_flush_icache_all		__glue(_CACHE,_flush_icache_all)
 #define __cpuc_flush_kern_all		__glue(_CACHE,_flush_kern_cache_all)

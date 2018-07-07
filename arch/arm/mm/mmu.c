@@ -373,8 +373,15 @@ const struct mem_type *get_mem_type(unsigned int type)
 }
 EXPORT_SYMBOL(get_mem_type);
 
+//k14AB : 20180630
+//	pte_offset_fixmap = pte_offset_late_fixmap;
 static pte_t *(*pte_offset_fixmap)(pmd_t *dir, unsigned long addr);
 
+//k14AB : 20180630
+//	pmd_populate_kernel(&init_mm, pmd, bm_pte);
+//	__pmd_populate(pmdp, __pa(ptep), _PAGE_KERNEL_TABLE);
+//#define _PAGE_KERNEL_TABLE	(PMD_TYPE_TABLE | PMD_BIT4 | PMD_DOMAIN(DOMAIN_KERNEL)) 
+//           1010001                   1            10000           1000000                
 static pte_t bm_pte[PTRS_PER_PTE + PTE_HWTABLE_PTRS]
 	__aligned(PTE_HWTABLE_OFF + PTE_HWTABLE_SIZE) __initdata;
 
