@@ -1773,6 +1773,7 @@ void __init paging_init(const struct machine_desc *mdesc)
 	early_fixmap_shutdown();
 	devicemaps_init(mdesc);
 	kmap_init();
+//k14AB :20180707 여기까지
 	tcm_init();
 
 	top_pmd = pmd_off_k(0xffff0000);
