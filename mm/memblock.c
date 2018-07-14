@@ -55,6 +55,9 @@ struct memblock memblock __initdata_memblock = {
 
 int memblock_debug __initdata_memblock;
 static bool system_has_some_mirror __initdata_memblock = false;
+//k14AB : 20180709
+//        bootmem_init(void)
+//        memblock_can_resize = 1
 static int memblock_can_resize __initdata_memblock;
 static int memblock_memory_in_slab __initdata_memblock = 0;
 static int memblock_reserved_in_slab __initdata_memblock = 0;
