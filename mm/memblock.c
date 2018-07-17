@@ -50,6 +50,13 @@ struct memblock memblock __initdata_memblock = {
 #endif
 
 	.bottom_up		= false,
+//k14AB :
+//      adjust_lowmem_bounds(void) 에서 설정
+//
+//      lowmem_limit 는 마지막 memblock의 block_end 단, vmalloc_limit 보다크면 vmalloc_limit
+//      memblock_limit 는 PMD_SIZE 로 align 되지않은 첫 memblock의 block_start or lowmem_limit
+//      current_limit = memblock_limit (memblock_limit 가 0 이면 lowmem_limit)
+//
 	.current_limit		= MEMBLOCK_ALLOC_ANYWHERE,
 };
 
