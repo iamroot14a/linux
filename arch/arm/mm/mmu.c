@@ -1778,6 +1778,11 @@ void __init paging_init(const struct machine_desc *mdesc)
 
 	top_pmd = pmd_off_k(0xffff0000);
 
+//k14AB : 20180717 출처:코드로알아보는 ARM리눅스 커널 216page
+//      제로페이지는 0으로 채워져 있고 전역적으로 공유되는 특수한 용도의 페이지를 말한다.
+//이 페이지는 0으로 초기화된 데이터(BSS세그먼트)나 읽기 접근으로 요구페이징이 발생한 경우
+//페이지 테이블 엔트리에 매핑할때 사용된다. 이렇게 매핑된경우 COW를 설정하여 이 페이지에
+//쓰기를 시도하면 쓰기 가능한 페이지로 교체되도록 한다.
 	/* allocate the zero page. */
 	zero_page = early_alloc(PAGE_SIZE);
 
