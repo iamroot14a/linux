@@ -616,6 +616,12 @@ typedef struct pglist_data {
 	struct zonelist node_zonelists[MAX_ZONELISTS];
 	int nr_zones;
 #ifdef CONFIG_FLAT_NODE_MEM_MAP	/* means !SPARSEMEM */
+//k14AB : 20180722
+// alloc_node_mem_map(...) 에서
+// node_mem_map = MAX_ORDER_NR_PAGES align 할수있게 보정함
+// => 보정 하면 실제 필요한 공간보다 적어지는데??(확보한 공간에 offset을 더해서 보정하기때문)
+// mem_map은 CONFIG_FLATMEM인 경우 align 하지 않음
+//
 	struct page *node_mem_map;
 #ifdef CONFIG_PAGE_EXTENSION
 	struct page_ext *node_page_ext;
