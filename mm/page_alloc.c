@@ -6271,6 +6271,7 @@ void __paginginit free_area_init_node(int nid, unsigned long *zones_size,
 #endif
 
 	reset_deferred_meminit(pgdat);
+//k14AB : 20180728 여기까지
 	free_area_init_core(pgdat);
 }
 
