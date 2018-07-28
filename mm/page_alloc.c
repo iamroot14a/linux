@@ -262,7 +262,13 @@ int min_free_kbytes = 1024;
 int user_min_free_kbytes = -1;
 int watermark_scale_factor = 10;
 
+//k14AB :  20180726
+// free_area_init_core()
+// highmem 미만(DMA, NORMAL) zone의 freesize 누적
 static unsigned long __meminitdata nr_kernel_pages;
+//k14AB :  20180726
+// free_area_init_core()
+// 전체 freesize 의 누적
 static unsigned long __meminitdata nr_all_pages;
 static unsigned long __meminitdata dma_reserve;
 
