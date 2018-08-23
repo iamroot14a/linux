@@ -27,6 +27,12 @@ struct pglist_data __refdata contig_page_data = {
 EXPORT_SYMBOL(contig_page_data);
 #endif
 
+//k14AB : 20180811
+//bootmem_init(void)
+//	min_low_pfn = min;
+//	max_low_pfn = max_low;
+//	max_pfn = max_high;
+
 unsigned long max_low_pfn;
 unsigned long min_low_pfn;
 unsigned long max_pfn;
