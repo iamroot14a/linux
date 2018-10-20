@@ -244,6 +244,9 @@ static void populate_properties(const void *blob,
 			p++;
 		}
 
+		//k14AB : "aaa@bb/" 인 경우 pa 는 문자열의 끝
+		//   ex : "syscon@40000000" @뒤는 주소, 연번등을 나타내는것으로 보임
+		//        "syscon" 만 추출
 		if (pa < ps)
 			pa = p;
 		len = (pa - ps) + 1;

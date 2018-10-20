@@ -83,6 +83,7 @@ ENDPROC(_find_first_bit_le)
  * Purpose  : Find next 'one' bit
  * Prototype: int find_next_zero_bit(void *addr, unsigned int maxbit, int offset)
  */
+k14ab_find_next_bit:
 ENTRY(_find_next_bit_le)
 		teq	r1, #0
 		beq	3b
@@ -174,10 +175,14 @@ ENDPROC(_find_next_bit_be)
  */
 .L_found:
 #if __LINUX_ARM_ARCH__ >= 5
+//k14AB : 가장 오른쪽에 set(1) bit 의 위치를 찾음
 		rsb	r0, r3, #0
 		and	r3, r3, r0
 		clz	r3, r3
+
+//k14AB : lsb 에서 부터의 위치(lsb = 0, msb = 31)
 		rsb	r3, r3, #31
+
 		add	r0, r2, r3
 #else
 		tst	r3, #0x0f

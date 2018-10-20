@@ -1842,6 +1842,9 @@ static struct pcpu_alloc_info * __init pcpu_build_alloc_info(
 	 */
 	min_unit_size = max_t(size_t, size_sum, PCPU_MIN_UNIT_SIZE);
 
+//k14AB : min_unit_size > atom_size => atom_size 로 align, upa = 1
+//      : min_unit_size < atom_size => atom_size 로 align, 
+//                  upa = 단위크기(atom_size)당 들어가는 unit 갯수
 	alloc_size = roundup(min_unit_size, atom_size);
 	upa = alloc_size / min_unit_size;
 	while (alloc_size % upa || (offset_in_page(alloc_size / upa)))

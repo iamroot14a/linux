@@ -584,7 +584,7 @@ u32 __cpu_logical_map[NR_CPUS] = { [0 ... NR_CPUS-1] = MPIDR_INVALID };
 /* K14AB: 2017년 12월 23일 20:51:40
  * ------------------------------
  * MPIDR_INVALID 
- * ~ 0x FF FF FF = 0x 00 00 00
+ * ~ 0x 00 FF FF FF = 0x FF 00 00 00
  */
 
 
@@ -648,6 +648,11 @@ static void __init smp_build_mpidr_hash(void)
 	 * Pre-scan the list of MPIDRS and filter out bits that do
 	 * not contribute to affinity levels, ie they never toggle.
 	 */
+//k14AB : cpu_logical_map(0) = 0xf00
+//k14AB : cpu_logical_map(1) = 0xf01
+//k14AB : cpu_logical_map(2) = 0xf02
+//k14AB : cpu_logical_map(3) = 0xf03
+//mask  = b00 | b01 | b10 | b11 = b11
 	for_each_possible_cpu(i)
 		mask |= (cpu_logical_map(i) ^ cpu_logical_map(0));
 	pr_debug("mask of set bits 0x%x\n", mask);

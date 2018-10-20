@@ -190,6 +190,7 @@ static inline unsigned int cpumask_next(int n, const struct cpumask *srcp)
 	/* -1 is a legal arg here. */
 	if (n != -1)
 		cpumask_check(n);
+//k14AB : k14ab_find_next_bit
 	return find_next_bit(cpumask_bits(srcp), nr_cpumask_bits, n+1);
 }
 
