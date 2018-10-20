@@ -143,6 +143,7 @@ uint32_t fdt_next_tag(const void *fdt, int startoffset, int *nextoffset)
 
 int _fdt_check_node_offset(const void *fdt, int offset)
 {
+//k14AB : 다음 tag로 offset변경하여 return
 	if ((offset < 0) || (offset % FDT_TAGSIZE)
 	    || (fdt_next_tag(fdt, offset, &offset) != FDT_BEGIN_NODE))
 		return -FDT_ERR_BADOFFSET;
@@ -152,6 +153,7 @@ int _fdt_check_node_offset(const void *fdt, int offset)
 
 int _fdt_check_prop_offset(const void *fdt, int offset)
 {
+//k14AB : 다음 tag로 offset변경하여 return
 	if ((offset < 0) || (offset % FDT_TAGSIZE)
 	    || (fdt_next_tag(fdt, offset, &offset) != FDT_PROP))
 		return -FDT_ERR_BADOFFSET;

@@ -137,6 +137,8 @@ static int _nextprop(const void *fdt, int offset)
 	int nextoffset;
 
 	do {
+//k14AB : fdt_next_tag는 함수명과 다르게 현재 offset의 tag 값을 반환함
+//        nextoffset에 다음 tag 의 offset 값
 		tag = fdt_next_tag(fdt, offset, &nextoffset);
 
 		switch (tag) {
@@ -254,6 +256,7 @@ int fdt_first_property_offset(const void *fdt, int nodeoffset)
 {
 	int offset;
 
+//k14AB : 다음 tag로 offset변경
 	if ((offset = _fdt_check_node_offset(fdt, nodeoffset)) < 0)
 		return offset;
 
@@ -262,6 +265,7 @@ int fdt_first_property_offset(const void *fdt, int nodeoffset)
 
 int fdt_next_property_offset(const void *fdt, int offset)
 {
+//k14AB : 다음 tag로 offset변경
 	if ((offset = _fdt_check_prop_offset(fdt, offset)) < 0)
 		return offset;
 
