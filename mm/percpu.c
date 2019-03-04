@@ -1847,6 +1847,9 @@ static struct pcpu_alloc_info * __init pcpu_build_alloc_info(
 //                  upa = 단위크기(atom_size)당 들어가는 unit 갯수
 	alloc_size = roundup(min_unit_size, atom_size);
 	upa = alloc_size / min_unit_size;
+//k14AB : alloc_size 는 page 단위 align(size_sum)됨
+//        alloc_size를 몇개(upa)개로 나누어야 여분공간이 안생기는지(alloc_size % upa)
+//        unit 당 할당 메모리 크기가 page 단위로 align 된경우 offset_in_page 통과
 	while (alloc_size % upa || (offset_in_page(alloc_size / upa)))
 		upa--;
 	max_upa = upa;
@@ -1866,7 +1869,9 @@ static struct pcpu_alloc_info * __init pcpu_build_alloc_info(
 				goto next_group;
 			}
 		}
+//k14AB : 각 cpu별 소속된 group 번호
 		group_map[cpu] = group;
+//k14AB : 각 group에 소속된 cpu 갯수(unplug 된 cpu 포함(possible cpu))
 		group_cnt[group]++;
 	}
 
@@ -1902,6 +1907,8 @@ static struct pcpu_alloc_info * __init pcpu_build_alloc_info(
 		last_allocs = allocs;
 		best_upa = upa;
 	}
+//k14AB : 1 unit 당 낭비되는 공간이 전체의 1/3이하이면서 
+//        1 unit 당 가장 많은 cpu가 들어가는 upa
 	upa = best_upa;
 
 	/* allocate and fill alloc_info */
